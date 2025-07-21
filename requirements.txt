@@ -3,3 +3,9 @@ numpy
 pandas
 requests
 scipy 
+beautifulsoup4
+pydantic
+python-dotenv
+transformers
+torch
+lxml
