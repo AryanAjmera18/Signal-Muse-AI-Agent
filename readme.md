@@ -29,7 +29,7 @@ signalmuse/
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/yourusername/signalmuse.git
+   git clone https://github.com/AryanAJmera18/signalmuse.git
    cd signalmuse
    ```
 
