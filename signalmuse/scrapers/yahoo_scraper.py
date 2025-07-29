@@ -96,5 +96,5 @@ def batch_yahoo_news_sentiment(
 
 if __name__ == "__main__":
     # Quick demo run
-    result = get_yahoo_news_sentiment("AAPL", save_path="signalmuse/data/real/yahoo_finance_aapl_labeled.csv")
+    result = get_yahoo_news_sentiment("GOOGL", save_path="signalmuse/data/real/yahoo_finance_aapl_labeled.csv")
     print(result[:2])

@@ -9,3 +9,5 @@ python-dotenv
 transformers
 torch
 lxml
+groq
+instructor
