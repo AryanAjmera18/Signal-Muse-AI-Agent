@@ -169,5 +169,3 @@ The system generates two main outputs:
 ---
 
 **⚠️ Disclaimer**: This tool is for educational and research purposes only. It does not provide financial advice. Always consult with qualified financial professionals before making investment decisions.
-
-
