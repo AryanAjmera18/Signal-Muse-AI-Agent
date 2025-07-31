@@ -76,6 +76,22 @@ def get_user_input():
         else:
             print("Please enter 'y' for yes or 'n' for no.")
 
+def get_report_type():
+    """Get user preference for report type"""
+    print("\n📊 Choose Report Format:")
+    print("1. Morning Briefing (Concise, standardized format)")
+    print("2. Detailed Analysis (Comprehensive news analysis)")
+    
+    while True:
+        choice = input("\n🎯 Select report type (1 or 2): ").strip()
+        
+        if choice == "1":
+            return "morning_briefing"
+        elif choice == "2":
+            return "detailed_analysis"
+        else:
+            print("❌ Please enter '1' for Morning Briefing or '2' for Detailed Analysis")
+
 def run_yahoo_scraper(ticker):
     """Run the Yahoo scraper to fetch news data"""
     print(f"\n🔄 Step 1: Fetching news for {ticker}...")
@@ -107,19 +123,27 @@ def run_yahoo_scraper(ticker):
         traceback.print_exc()
         return None
 
-def generate_report(csv_file, ticker):
+def generate_report(csv_file, ticker, report_type="detailed_analysis"):
     """Generate the human-like report using Groq API"""
     print(f"\n🔄 Step 2: Generating AI-powered report...")
     
     # Set up output path
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    report_output = f"signalmuse/outputs/{ticker.lower()}_analysis_report_{timestamp}.md"
+    
+    if report_type == "morning_briefing":
+        report_output = f"signalmuse/outputs/{ticker.lower()}_morning_briefing_{timestamp}.md"
+        print(f"🤖 Generating Morning Briefing format...")
+    else:
+        report_output = f"signalmuse/outputs/{ticker.lower()}_analysis_report_{timestamp}.md"
+        print(f"🤖 Generating Detailed Analysis format...")
     
     try:
-        from signalmuse.outputs.report_generator import process_csv_to_report
-        
-        print(f"🤖 Using Groq AI to generate human-like analysis...")
-        result_path = process_csv_to_report(csv_file, report_output)
+        if report_type == "morning_briefing":
+            from signalmuse.outputs.report_generator import process_csv_to_morning_briefing
+            result_path = process_csv_to_morning_briefing(csv_file, ticker, report_output)
+        else:
+            from signalmuse.outputs.report_generator import process_csv_to_report
+            result_path = process_csv_to_report(csv_file, report_output)
         
         print(f"✅ Report generation complete!")
         print(f"📄 Report saved to: {result_path}")
@@ -136,6 +160,7 @@ def main():
     """Main driver function"""
     print("🚀 News Analysis Driver - Stock Market Intelligence")
     print("This tool will fetch news and generate AI-powered analysis reports")
+    print("Supports both Morning Briefing and Detailed Analysis formats")
     
     # Check dependencies
     if not check_dependencies():
@@ -146,6 +171,9 @@ def main():
         # Get user input
         ticker = get_user_input()
         
+        # Get report type preference
+        report_type = get_report_type()
+        
         # Step 1: Run Yahoo scraper
         csv_file = run_yahoo_scraper(ticker)
         if not csv_file:
@@ -153,7 +181,7 @@ def main():
             return 1
         
         # Step 2: Generate report
-        report_file = generate_report(csv_file, ticker)
+        report_file = generate_report(csv_file, ticker, report_type)
         if not report_file:
             print(f"\n❌ Failed to generate report")
             return 1
@@ -165,6 +193,7 @@ def main():
         print(f"📊 Ticker analyzed: {ticker}")
         print(f"📁 Raw data: {csv_file}")
         print(f"📄 AI Report: {report_file}")
+        print(f"📋 Report type: {report_type.replace('_', ' ').title()}")
         print("\n💡 Next steps:")
         print(f"   - Open {report_file} to read the analysis")
         print(f"   - Share the report with your team")

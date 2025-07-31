@@ -1,0 +1,183 @@
+{
+  "execution_summary": {
+    "total_agents": 4,
+    "successful_agents": 4,
+    "timestamp": "2025-08-01T02:25:32.389588"
+  },
+  "agent_results": {
+    "agent1": {
+      "success": true,
+      "data": {
+        "articles_count": 45,
+        "sources_count": 9,
+        "categories": {
+          "cryptocurrency": 15,
+          "general_financial": 10,
+          "investing_markets": 10,
+          "economy_policy": 5,
+          "fintech": 5
+        },
+        "filepath": "signalmuse\\data\\real\\agent1_news_20250801_022532.csv",
+        "sample_articles": [
+          {
+            "title": "Amazon's gloomy earnings forecast overshadows better-than-expected results",
+            "link": "https://www.cnbc.com/2025/07/31/amazon-amzn-q2-earnings-report-2025.html",
+            "summary": "The earnings report gives investors a fresh look at how Amazon is navigating tariff-related uncertainty.",
+            "published": "2025-07-31 20:54:16",
+            "source": "CNBC World News",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "108175840",
+            "author": "",
+            "tags": [],
+            "id": "c307b936cb8916c4f71b20389452d6f2"
+          },
+          {
+            "title": "Apple reports biggest revenue growth since December 2021",
+            "link": "https://www.cnbc.com/2025/07/31/apple-aapl-q3-earnings-report-2025.html",
+            "summary": "Apple CEO Tim Cook said that Apple would \"significantly grow\" its AI investments, adding that the company is \"open to M&amp;A that accelerates our roadmap.\"",
+            "published": "2025-07-31 20:51:45",
+            "source": "CNBC World News",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "108178713",
+            "author": "",
+            "tags": [],
+            "id": "5ba7b3ff6caaebcd54432b529a3bcaf0"
+          },
+          {
+            "title": "4 ways the SEC\u2019s new crypto agenda could shake up digital assets and U.S. financial markets",
+            "link": "https://www.marketwatch.com/story/secs-atkins-launches-project-crypto-to-bring-u-s-markets-on-chain-heres-what-you-should-know-30958653?mod=mw_rss_topstories",
+            "summary": "SEC Chairman Paul Atkins outlined a far-reaching rewrite of the regulatory rulebook for digital assets.",
+            "published": "2025-07-31 20:51:00",
+            "source": "MarketWatch Top Stories",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "WP-MKTW-0004359404",
+            "author": "Frances Yue",
+            "tags": [],
+            "id": "964b023f76332981c01a6c744fc6d26e"
+          },
+          {
+            "title": "Coinbase misses the mark on quarterly sales, including this all-important revenue stream",
+            "link": "https://www.marketwatch.com/story/coinbase-misses-the-mark-on-quarterly-sales-including-this-all-important-revenue-stream-17418f3e?mod=mw_rss_topstories",
+            "summary": "The crypto exchange called its second quarter \u201csolid,\u201d but revenue dropped 26% quarter-on-quarter and some of its guidance was also disappointing.",
+            "published": "2025-07-31 20:49:00",
+            "source": "MarketWatch Top Stories",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "WP-MKTW-0004359338",
+            "author": "Claudia Assis",
+            "tags": [],
+            "id": "c5df61d8cd4819c1f960894b8f348dcf"
+          },
+          {
+            "title": "As Trump\u2019s deadline hits, here are the countries with trade deals, and those without them",
+            "link": "https://www.marketwatch.com/story/as-trumps-deadline-hits-here-are-the-countries-with-trade-deals-and-those-without-them-dcb935e3?mod=mw_rss_topstories",
+            "summary": "The Trump administration signaled on Thursday afternoon that it will stick with its deadline of Friday for imposing higher tariffs on trading partners that haven\u2019t made trade deals with administration officials.",
+            "published": "2025-07-31 20:48:00",
+            "source": "MarketWatch Top Stories",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "WP-MKTW-0004359302",
+            "author": "Victor Reklaitis",
+            "tags": [],
+            "id": "90af504461810e7374bcfb43e248aa24"
+          }
+        ]
+      },
+      "timestamp": "2025-08-01T02:25:32.369476",
+      "error": null
+    },
+    "agent2": {
+      "success": true,
+      "data": {
+        "economic_events": [
+          {
+            "time": "08:30",
+            "event": "Building Permits",
+            "consensus": "1.45M",
+            "previous": "1.43M",
+            "impact": "Medium"
+          },
+          {
+            "time": "08:30",
+            "event": "Housing Starts",
+            "consensus": "1.35M",
+            "previous": "1.31M",
+            "impact": "Medium"
+          },
+          {
+            "time": "10:00",
+            "event": "Consumer Sentiment (Final)",
+            "consensus": "66.0",
+            "previous": "66.0",
+            "impact": "Low"
+          }
+        ],
+        "earnings_events": [
+          {
+            "company": "Schlumberger",
+            "ticker": "SLB",
+            "time": "Pre",
+            "eps_estimate": "$0.68",
+            "revenue_estimate": "$6.8B"
+          },
+          {
+            "company": "Travelers",
+            "ticker": "TRV",
+            "time": "Pre",
+            "eps_estimate": "$3.85",
+            "revenue_estimate": "$9.2B"
+          },
+          {
+            "company": "Synchrony Financial",
+            "ticker": "SYF",
+            "time": "Pre",
+            "eps_estimate": "$1.52",
+            "revenue_estimate": "$4.1B"
+          }
+        ],
+        "economic_count": 3,
+        "earnings_count": 3
+      },
+      "timestamp": "2025-08-01T02:25:32.370474",
+      "error": null
+    },
+    "agent3": {
+      "success": true,
+      "data": {
+        "market_data": {
+          "sp500_futures": 0.15,
+          "nasdaq_futures": 0.22,
+          "russell_futures": 0.08,
+          "crude_oil": 78.45,
+          "treasury_yield": 4.18,
+          "vix": 13.2,
+          "sentiment": "Cautiously Optimistic"
+        },
+        "futures_summary": {
+          "sp500_change": 0.15,
+          "nasdaq_change": 0.22,
+          "russell_change": 0.08,
+          "crude_oil": 78.45,
+          "treasury_yield": 4.18,
+          "vix": 13.2,
+          "sentiment": "Cautiously Optimistic"
+        }
+      },
+      "timestamp": "2025-08-01T02:25:32.370474",
+      "error": null
+    },
+    "agent4": {
+      "success": true,
+      "data": {
+        "briefing_filepath": "signalmuse\\outputs\\orchestrated_briefing_20250801_022532.md",
+        "briefing_length": 4619,
+        "format": "unbound_x"
+      },
+      "timestamp": "2025-08-01T02:25:32.389588",
+      "error": null
+    }
+  }
+}
