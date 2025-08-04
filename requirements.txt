@@ -16,3 +16,4 @@ fastapi
 uvicorn
 asyncio
 aiohttp
+yfinance

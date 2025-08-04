@@ -11,15 +11,14 @@ import feedparser
 import pandas as pd
 from datetime import datetime, timedelta
 import time
-import logging
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from pathlib import Path
 import hashlib
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from signalmuse.utils.utils import get_logger, save_dataframe_to_csv, generate_timestamp_filename
+
+logger = get_logger(__name__)
 
 @dataclass
 class RSSFeed:
@@ -42,15 +41,9 @@ class MultiSourceScraper:
         })
     
     def _initialize_feeds(self) -> Dict[str, RSSFeed]:
-        """Initialize RSS feed configurations"""
+        """Initialize RSS feed configurations - optimized based on testing"""
         return {
-            # General Financial News
-            'reuters_business': RSSFeed(
-                name='Reuters Business',
-                url='https://feeds.reuters.com/reuters/businessNews',
-                category='general_financial',
-                priority=1
-            ),
+            # General Financial News - HIGH PRIORITY
             'marketwatch_top': RSSFeed(
                 name='MarketWatch Top Stories',
                 url='https://feeds.marketwatch.com/marketwatch/topstories/',
@@ -63,36 +56,49 @@ class MultiSourceScraper:
                 category='general_financial',
                 priority=1
             ),
+            'yahoo_finance': RSSFeed(
+                name='Yahoo Finance',
+                url='https://feeds.finance.yahoo.com/rss/2.0/headline',
+                category='general_financial',
+                priority=1
+            ),
+            'bloomberg_markets': RSSFeed(
+                name='Bloomberg Markets',
+                url='https://feeds.bloomberg.com/markets/news.rss',
+                category='general_financial',
+                priority=1
+            ),
             
-            # Investing & Markets
+            # Investing & Markets - VERIFIED WORKING
             'motley_fool': RSSFeed(
                 name='The Motley Fool',
                 url='https://www.fool.com/feeds/index.aspx?id=foolwatch&format=rss2',
                 category='investing_markets',
-                priority=2
+                priority=1  # Upgraded to priority 1 due to high quality
             ),
             'thestreet': RSSFeed(
                 name='TheStreet',
                 url='https://www.thestreet.com/.rss/full/',
                 category='investing_markets',
-                priority=2
+                priority=1  # Upgraded to priority 1 due to high volume and quality
             ),
-            'kiplinger': RSSFeed(
-                name='Kiplinger Investing',
-                url='https://www.kiplinger.com/rss/kiplinger_rss_investing.xml',
+            'seeking_alpha': RSSFeed(
+                name='Seeking Alpha',
+                url='https://seekingalpha.com/feed.xml',
                 category='investing_markets',
-                priority=2
+                priority=1
             ),
             
-            # Economy & Policy
+            # Economy & Policy - VERIFIED WORKING
             'npr_economy': RSSFeed(
                 name='NPR Economy',
                 url='https://feeds.npr.org/1019/rss.xml',
                 category='economy_policy',
                 priority=1
             ),
+
             
-            # Cryptocurrency
+            # Cryptocurrency - VERIFIED WORKING (Balanced to reduce crypto overweight)
             'coindesk': RSSFeed(
                 name='CoinDesk',
                 url='https://www.coindesk.com/arc/outboundfeeds/rss/',
@@ -103,36 +109,24 @@ class MultiSourceScraper:
                 name='Cointelegraph',
                 url='https://cointelegraph.com/rss',
                 category='cryptocurrency',
-                priority=1
-            ),
-            'decrypt': RSSFeed(
-                name='Decrypt',
-                url='https://decrypt.co/feed',
-                category='cryptocurrency',
-                priority=2
+                priority=2,  # Reduced priority to balance crypto content
+                enabled=True
             ),
             
-            # Commentary & Analysis
-            'zerohedge': RSSFeed(
-                name='ZeroHedge',
-                url='https://www.zerohedge.com/fullrss.xml',
-                category='commentary_analysis',
-                priority=2
-            ),
-            
-            # Fintech
+            # Fintech - VERIFIED WORKING
             'techcrunch_fintech': RSSFeed(
                 name='TechCrunch Fintech',
                 url='https://techcrunch.com/tag/fintech/feed/',
                 category='fintech',
                 priority=2
             ),
-            'finextra': RSSFeed(
-                name='Finextra',
-                url='https://www.finextra.com/rss/news.aspx',
-                category='fintech',
-                priority=2
-            )
+            
+            # REMOVED SOURCES (Failed during testing):
+            # - Reuters Business: Network issues
+            # - Kiplinger Investing: 404 error
+            # - ZeroHedge: 404 error  
+            # - Finextra: 0 articles returned
+            # - Decrypt: Removed to balance crypto content (was producing 55 articles)
         }
     
     def fetch_feed(self, feed: RSSFeed) -> List[Dict]:
@@ -240,23 +234,12 @@ class MultiSourceScraper:
     
     def save_to_csv(self, df: pd.DataFrame, filename: str = None) -> str:
         """Save articles to CSV file"""
-        if df.empty:
-            logger.warning("No articles to save")
-            return ""
-        
         if filename is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"multi_source_news_{timestamp}.csv"
+            filename = generate_timestamp_filename("multi_source_news")
         
-        # Ensure data directory exists
-        data_dir = Path("signalmuse/data/real")
-        data_dir.mkdir(parents=True, exist_ok=True)
-        
-        filepath = data_dir / filename
-        df.to_csv(filepath, index=False)
-        
-        logger.info(f"Saved {len(df)} articles to {filepath}")
-        return str(filepath)
+        from signalmuse.utils.utils import config
+        filepath = config.data_dir / filename
+        return save_dataframe_to_csv(df, str(filepath), logger)
 
 def main():
     """Test the multi-source scraper"""

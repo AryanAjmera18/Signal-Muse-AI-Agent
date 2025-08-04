@@ -1,0 +1,204 @@
+{
+  "execution_summary": {
+    "total_agents": 4,
+    "successful_agents": 4,
+    "timestamp": "2025-08-04T15:24:57.682180"
+  },
+  "agent_results": {
+    "agent1": {
+      "success": true,
+      "data": {
+        "articles_count": 100,
+        "sources_count": 10,
+        "categories": {
+          "general_financial": 30,
+          "investing_markets": 30,
+          "cryptocurrency": 20,
+          "economy_policy": 10,
+          "fintech": 10
+        },
+        "filepath": "signalmuse\\data\\real\\agent1_news_20250804_152317.csv",
+        "sample_articles": [
+          {
+            "title": "BMW Takes Aim at Tesla Market Share",
+            "link": "https://www.bloomberg.com/news/videos/2025-08-04/bmw-takes-aim-at-tesla-market-share-video",
+            "summary": "BMW plans to release 40 new or updated models with slick software, high-performance computers, and radically different design cues. Bloomberg\u2019s Stefan Nicola explains why this is a swing at Tesla on \"Bloomberg Tech.\" (Source: Bloomberg)",
+            "published": "2025-08-04 19:19:47",
+            "source": "Bloomberg Markets",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "https://www.bloomberg.com/news/videos/2025-08-04/bmw-takes-aim-at-tesla-market-share-video",
+            "author": "",
+            "tags": [
+              {
+                "term": "NMS:TSLA",
+                "scheme": "stock-symbol",
+                "label": null
+              },
+              {
+                "term": "GER:BMW",
+                "scheme": "stock-symbol",
+                "label": null
+              }
+            ],
+            "id": "b702b21e0cb487f2db4797545fc0e694"
+          },
+          {
+            "title": "Tesla to Award Musk $30B in Stock",
+            "link": "https://www.bloomberg.com/news/videos/2025-08-04/tesla-to-award-musk-30b-in-stock-video",
+            "summary": "Tesla has approved an interim stock award worth around $30 billion for CEO Elon Musk, aiming to keep him focused on the electric vehicle maker. Bloomberg\u2019s Max Chafkin joins Caroline Hyde and Ed Ludlow on \u201cBloomberg Tech.\u201d (Source: Bloomberg)",
+            "published": "2025-08-04 19:16:49",
+            "source": "Bloomberg Markets",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "https://www.bloomberg.com/news/videos/2025-08-04/tesla-to-award-musk-30b-in-stock-video",
+            "author": "",
+            "tags": [
+              {
+                "term": "NMS:TSLA",
+                "scheme": "stock-symbol",
+                "label": null
+              }
+            ],
+            "id": "32a6bfb7723f42a633ddc206cdcb27da"
+          },
+          {
+            "title": "Walmart is selling a $1,599 electric bike for $448, and shoppers say it 'rides comfortably'",
+            "link": "https://www.thestreet.com/deals/mihover-550-watt-electric-bike-walmart-flash-sale",
+            "summary": "\"For the price, it delivers way more than expected.\"",
+            "published": "2025-08-04 19:15:00",
+            "source": "TheStreet",
+            "category": "investing_markets",
+            "priority": 1,
+            "guid": "https://www.thestreet.com/deals/mihover-550-watt-electric-bike-walmart-flash-sale",
+            "author": "Pauline Lacsamana",
+            "tags": [
+              {
+                "term": "Shopping",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Electronics",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Commerce",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Walmart",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Outdoors",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Deals",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Savings",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Deals & Bargains News",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Commerce Deal",
+                "scheme": null,
+                "label": null
+              }
+            ],
+            "id": "1c0a9d900f3614b1899be556c51b4a08"
+          },
+          {
+            "title": "Bill Beach on How Trump Just Politicized US Economic Data",
+            "link": "https://www.bloomberg.com/news/articles/2025-08-04/bill-beach-on-how-trump-just-politicized-us-economic-data",
+            "summary": "<p>What comes after the firing of a BLS chief.</p>",
+            "published": "2025-08-04 19:00:26",
+            "source": "Bloomberg Markets",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "https://www.bloomberg.com/news/articles/2025-08-04/bill-beach-on-how-trump-just-politicized-us-economic-data",
+            "author": "Joe Weisenthal, Tracy Alloway",
+            "tags": [],
+            "id": "098718f58c8d962e75642497f965b261"
+          },
+          {
+            "title": "Contentious July jobs report confirms the U.S. economy is slowing sharply. Here\u2019s why",
+            "link": "https://www.cnbc.com/2025/08/04/contentious-july-jobs-report-confirms-the-us-economy-is-slowing-sharply.html",
+            "summary": "The weakness in job growth points to an economy that may be slowing even more than some of the traditional metrics are showing.",
+            "published": "2025-08-04 18:56:42",
+            "source": "CNBC World News",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "108181105",
+            "author": "",
+            "tags": [],
+            "id": "c7828ea5e523b9441edc058918fa066b"
+          }
+        ]
+      },
+      "timestamp": "2025-08-04T15:23:17.828442",
+      "error": null
+    },
+    "agent2": {
+      "success": true,
+      "data": {
+        "economic_events": [],
+        "earnings_events": [],
+        "economic_count": 0,
+        "earnings_count": 0
+      },
+      "timestamp": "2025-08-04T15:23:21.486460",
+      "error": null
+    },
+    "agent3": {
+      "success": true,
+      "data": {
+        "market_data": {
+          "sp500_futures": 0.0,
+          "nasdaq_futures": 0.0,
+          "russell_futures": 0.0,
+          "crude_oil": 68.65,
+          "treasury_yield": 0.0,
+          "vix": 0.0,
+          "sentiment": "Neutral"
+        },
+        "futures_summary": {
+          "sp500_change": 0.0,
+          "nasdaq_change": 0.0,
+          "russell_change": 0.0,
+          "crude_oil": 68.65,
+          "treasury_yield": 0.0,
+          "vix": 0.0,
+          "sentiment": "Neutral"
+        }
+      },
+      "timestamp": "2025-08-04T15:23:22.646820",
+      "error": null
+    },
+    "agent4": {
+      "success": true,
+      "data": {
+        "briefing_filepath": "signalmuse\\outputs\\Current_Brief_20250804_152457.md",
+        "briefing_length": 4802,
+        "format": "individual_ai_investor_briefing",
+        "articles_processed": 5,
+        "individual_ai_calls": 5
+      },
+      "timestamp": "2025-08-04T15:24:57.681681",
+      "error": null
+    }
+  }
+}

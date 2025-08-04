@@ -14,19 +14,13 @@ import pandas as pd
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 from pathlib import Path
-import logging
 import json
 import requests
 from dataclasses import dataclass, asdict
-import os
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+from signalmuse.utils.utils import get_logger, config
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 @dataclass
 class AgentResult:
@@ -180,7 +174,7 @@ class AgentOrchestrator:
         
         try:
             # Import the enhanced briefing generator for economic data
-            from signalmuse.outputs.enhanced_briefing_generator import EnhancedBriefingGenerator
+            from signalmuse.generators.enhanced_briefing_generator import EnhancedBriefingGenerator
             
             generator = EnhancedBriefingGenerator()
             
@@ -216,7 +210,7 @@ class AgentOrchestrator:
         
         try:
             # Import the enhanced briefing generator for market data
-            from signalmuse.outputs.enhanced_briefing_generator import EnhancedBriefingGenerator
+            from signalmuse.generators.enhanced_briefing_generator import EnhancedBriefingGenerator
             
             generator = EnhancedBriefingGenerator()
             
@@ -252,8 +246,8 @@ class AgentOrchestrator:
             )
     
     async def _run_agent4(self) -> AgentResult:
-        """Agent 4: Report Generation & Synthesis"""
-        logger.info("📝 Agent 4: Generating comprehensive report")
+        """Agent 4: Report Generation & Synthesis with Individual AI Processing"""
+        logger.info("📝 Agent 4: Generating investor briefing with individual AI analysis")
         
         try:
             # Get the news data filepath from Agent 1
@@ -278,26 +272,46 @@ class AgentOrchestrator:
                     error="News data file not found"
                 )
             
-            # Import the enhanced briefing generator
-            from signalmuse.outputs.enhanced_briefing_generator import EnhancedBriefingGenerator
+            # Load news data for individual processing
+            df = pd.read_csv(news_filepath)
             
-            generator = EnhancedBriefingGenerator()
+            # Import the individual article processor
+            from signalmuse.generators.individual_article_processor import IndividualArticleProcessor
             
-            # Generate briefing
-            briefing = generator.generate_briefing(news_filepath)
+            processor = IndividualArticleProcessor()
+            
+            # Process top 5 articles with individual AI analysis
+            logger.info("🤖 Processing top 5 articles with individual AI calls")
+            processed_articles = await processor.process_top_articles(df, num_articles=5)
+            
+            # Get market data from Agent 3 results
+            agent3_result = self.results.get('agent3')
+            market_data = None
+            if agent3_result and agent3_result.success:
+                market_data = agent3_result.data.get('futures_summary')
+            
+            # Generate investor briefing in the requested format with market data
+            briefing = processor.generate_investor_briefing_format(processed_articles, market_data)
             
             # Save briefing
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"orchestrated_briefing_{timestamp}.md"
-            filepath = generator.save_briefing(briefing, filename)
+            filename = f"Current_Brief_{timestamp}.md"
+            filepath = config.output_dir / filename
+            
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(briefing)
+            
+            logger.info(f"💾 Saved investor briefing to: {filepath}")
             
             return AgentResult(
                 agent_name="Agent4_ReportGeneration",
                 success=True,
                 data={
-                    'briefing_filepath': filepath,
+                    'briefing_filepath': str(filepath),
                     'briefing_length': len(briefing),
-                    'format': self.config.briefing_format
+                    'format': 'individual_ai_investor_briefing',
+                    'articles_processed': len(processed_articles),
+                    'individual_ai_calls': len(processed_articles)
                 },
                 timestamp=datetime.now().isoformat()
             )
@@ -383,7 +397,7 @@ class AgentOrchestrator:
             
             # Save final report
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            report_filepath = f"signalmuse/outputs/orchestration_report_{timestamp}.json"
+            report_filepath = config.output_dir / f"orchestration_report_{timestamp}.json"
             
             with open(report_filepath, 'w') as f:
                 json.dump(report, f, indent=2, default=str)

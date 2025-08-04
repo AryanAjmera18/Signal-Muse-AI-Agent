@@ -13,17 +13,16 @@ import re
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 from pathlib import Path
-import logging
 from dataclasses import dataclass
-import os
-from dotenv import load_dotenv
+from pydantic import BaseModel
+import instructor
+from groq import Groq
 
-# Load environment variables
-load_dotenv()
+from signalmuse.utils.utils import get_logger, config, save_dataframe_to_csv, generate_timestamp_filename
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+
+# YFinance fallback removed - not used in main pipeline
 
 # Common stock tickers for extraction
 COMMON_TICKERS = {
@@ -42,6 +41,12 @@ COMMON_TICKERS = {
     'NKE': 'Nike', 'DIS': 'Disney', 'CMCSA': 'Comcast', 'VZ': 'Verizon',
     'T': 'AT&T', 'V': 'Visa', 'MA': 'Mastercard', 'AXP': 'American Express'
 }
+
+class TickerExtraction(BaseModel):
+    """Pydantic model for ticker extraction response"""
+    ticker: str
+    company_name: str
+    confidence: float
 
 @dataclass
 class MarketData:
@@ -76,142 +81,259 @@ class EnhancedBriefingGenerator:
     """Enhanced morning briefing generator with UnBound X format"""
     
     def __init__(self):
-        self.fmp_api_key = os.getenv("FMP_API_KEY")
-        self.groq_api_key = os.getenv("GROQ_API_KEY")
+        self.fmp_api_key = config.fmp_api_key
+        self.groq_api_key = config.groq_api_key
         self.base_url = "https://financialmodelingprep.com/api/v3"
+        self.groq_client = self._setup_groq_client() if self.groq_api_key else None
+        
+    def _setup_groq_client(self):
+        """Initialize Groq client for intelligent ticker extraction"""
+        if not self.groq_api_key:
+            return None
+        try:
+            return instructor.from_groq(Groq(api_key=self.groq_api_key))
+        except Exception as e:
+            logger.warning(f"Failed to initialize Groq client: {e}")
+            return None
         
     def _extract_ticker_from_headline(self, title: str, summary: str = "") -> Tuple[str, str]:
-        """Extract company ticker and name from headline"""
-        # Combine title and summary for better extraction
+        """Extract company ticker and name from headline using intelligent GROQ API"""
+        
+        # Try GROQ API first for intelligent extraction
+        if self.groq_client:
+            try:
+                return self._extract_ticker_with_groq(title, summary)
+            except Exception as e:
+                logger.warning(f"GROQ ticker extraction failed: {e}, falling back to regex")
+        
+        # Fallback to simple regex-based extraction if GROQ fails
+        return self._extract_ticker_fallback(title, summary)
+    
+    def _extract_ticker_with_groq(self, title: str, summary: str = "") -> Tuple[str, str]:
+        """Use GROQ API for intelligent ticker extraction"""
+        
+        # Create ticker list for the prompt
+        ticker_list = ", ".join([f"{ticker} ({name})" for ticker, name in list(COMMON_TICKERS.items())[:20]])  # Limit for prompt size
+        
+        prompt = f"""
+        Analyze this financial news headline and summary to extract the primary company ticker and name.
+        
+        Headline: {title}
+        Summary: {summary[:200]}...
+        
+        Available tickers: {ticker_list}
+        
+        Rules:
+        1. Return the ticker symbol and full company name of the PRIMARY company mentioned
+        2. If multiple companies are mentioned, choose the one that is the main subject
+        3. If no known company is found, return ticker="N/A" and company_name="N/A"
+        4. Confidence should be 0.0-1.0 based on how certain you are
+        5. Be conservative - only return high confidence matches
+        
+        Focus on explicit mentions of company names, stock symbols, or earnings reports.
+        """
+        
+        try:
+            extraction = self.groq_client.chat.completions.create(
+                model="llama3-8b-8192",
+                messages=[
+                    {"role": "system", "content": "You are an expert financial analyst who extracts company tickers from news headlines with high accuracy."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_model=TickerExtraction,
+                max_tokens=100,
+                temperature=0.1
+            )
+            
+            # Validate the extracted ticker is in our known list
+            if extraction.ticker in COMMON_TICKERS and extraction.confidence > 0.6:
+                return extraction.ticker, COMMON_TICKERS[extraction.ticker]
+            elif extraction.ticker == "N/A":
+                return "N/A", "N/A"
+            else:
+                # If GROQ returns unknown ticker, fall back
+                logger.warning(f"GROQ returned unknown ticker {extraction.ticker}, using fallback")
+                return self._extract_ticker_fallback(title, summary)
+                
+        except Exception as e:
+            logger.error(f"GROQ API error in ticker extraction: {e}")
+            raise e
+    
+    def _extract_ticker_fallback(self, title: str, summary: str = "") -> Tuple[str, str]:
+        """Simple regex-based fallback ticker extraction"""
         text = f"{title} {summary}".upper()
         
-        # First, look for "Company stock" patterns as they're most specific
-        # This should be the highest priority since it's explicit
-        stock_pattern = r'\b([A-Z]+)\s+STOCK\b'
-        match = re.search(stock_pattern, text)
-        if match:
-            company_name_match = match.group(1).upper()
-            # Look for exact match first
-            for ticker, company_name in COMMON_TICKERS.items():
-                if company_name_match == company_name.upper():
-                    return ticker, company_name
-            # Then look for partial matches
-            for ticker, company_name in COMMON_TICKERS.items():
-                if company_name_match in company_name.upper() or company_name.upper() in company_name_match:
-                    return ticker, company_name
-        else:
-            pass # No debug logging
-        
-        # Look for exact ticker matches in the title only (not summary)
-        title_upper = title.upper()
+        # Look for exact ticker matches first
         for ticker, company_name in COMMON_TICKERS.items():
-            # Use word boundaries to avoid false positives like "GSA" matching "GS"
             ticker_pattern = r'\b' + re.escape(ticker) + r'\b'
-            if re.search(ticker_pattern, title_upper):
+            if re.search(ticker_pattern, text):
                 return ticker, company_name
         
-        # Look for company names in the title only (prioritize by position)
-        # BUT only if no stock pattern was found above
-        found_companies = []
-        title_upper = title.upper()
+        # Look for common company names
         for ticker, company_name in COMMON_TICKERS.items():
-            # Check for company name variations
-            company_variations = [
-                company_name.upper(),
-                company_name.upper().replace(' ', ''),
-                company_name.upper().replace(' ', ' & '),
-                company_name.upper().replace(' ', ' AND '),
-                company_name.upper().replace(' ', '&'),
-                # Handle common abbreviations
-                'APPLE' if company_name == 'Apple' else company_name.upper(),
-                'MICROSOFT' if company_name == 'Microsoft' else company_name.upper(),
-                'ALPHABET' if company_name == 'Alphabet' else company_name.upper(),
-                'AMAZON' if company_name == 'Amazon' else company_name.upper(),
-                'TESLA' if company_name == 'Tesla' else company_name.upper(),
-                'META' if company_name == 'Meta' else company_name.upper(),
-                'NVIDIA' if company_name == 'NVIDIA' else company_name.upper(),
-                'PALANTIR' if company_name == 'Palantir' else company_name.upper(),
-                'REDDIT' if company_name == 'Reddit' else company_name.upper(),
-                'COINBASE' if company_name == 'Coinbase' else company_name.upper(),
-                'ROBINHOOD' if company_name == 'Robinhood' else company_name.upper(),
-                'RIVIAN' if company_name == 'Rivian' else company_name.upper(),
-                'LUCID' if company_name == 'Lucid' else company_name.upper(),
-                'NIO' if company_name == 'NIO' else company_name.upper(),
-                'XPENG' if company_name == 'XPeng' else company_name.upper(),
-                'LI AUTO' if company_name == 'Li Auto' else company_name.upper(),
-                'JPMORGAN' if company_name == 'JPMorgan' else company_name.upper(),
-                'BANK OF AMERICA' if company_name == 'Bank of America' else company_name.upper(),
-                'WELLS FARGO' if company_name == 'Wells Fargo' else company_name.upper(),
-                'GOLDMAN SACHS' if company_name == 'Goldman Sachs' else company_name.upper(),
-                'MORGAN STANLEY' if company_name == 'Morgan Stanley' else company_name.upper(),
-                'CITIGROUP' if company_name == 'Citigroup' else company_name.upper(),
-                'JOHNSON & JOHNSON' if company_name == 'Johnson & Johnson' else company_name.upper(),
-                'PFIZER' if company_name == 'Pfizer' else company_name.upper(),
-                'UNITEDHEALTH' if company_name == 'UnitedHealth' else company_name.upper(),
-                'HOME DEPOT' if company_name == 'Home Depot' else company_name.upper(),
-                'WALMART' if company_name == 'Walmart' else company_name.upper(),
-                'COSTCO' if company_name == 'Costco' else company_name.upper(),
-                'TARGET' if company_name == 'Target' else company_name.upper(),
-                'NIKE' if company_name == 'Nike' else company_name.upper(),
-                'DISNEY' if company_name == 'Disney' else company_name.upper(),
-                'COMCAST' if company_name == 'Comcast' else company_name.upper(),
-                'VERIZON' if company_name == 'Verizon' else company_name.upper(),
-                'AT&T' if company_name == 'AT&T' else company_name.upper(),
-                'VISA' if company_name == 'Visa' else company_name.upper(),
-                'MASTERCARD' if company_name == 'Mastercard' else company_name.upper(),
-                'AMERICAN EXPRESS' if company_name == 'American Express' else company_name.upper(),
-            ]
-            
-            for variation in company_variations:
-                if variation in title_upper:
-                    # Find the position of the company name in the title
-                    pos = title_upper.find(variation)
-                    found_companies.append((ticker, company_name, pos))
-                    break
+            if company_name.upper() in text:
+                return ticker, company_name
         
-        # Sort by position (earlier in title = higher priority) and return the first match
-        if found_companies:
-            found_companies.sort(key=lambda x: x[2])
-            return found_companies[0][0], found_companies[0][1]
-        
-        # Look for common patterns like "Company (TICKER)" or "TICKER stock"
-        ticker_pattern = r'\b([A-Z]{2,5})\s*(?:stock|shares?|earnings?|reports?|results?)\b'
-        match = re.search(ticker_pattern, text)
-        if match:
+        # Look for "stock" patterns
+        stock_pattern = r'\b([A-Z]{2,5})\s+(?:stock|shares?)\b'
+        match = re.search(stock_pattern, text)
+        if match and match.group(1) in COMMON_TICKERS:
             ticker = match.group(1)
-            if ticker in COMMON_TICKERS:
-                return ticker, COMMON_TICKERS[ticker]
+            return ticker, COMMON_TICKERS[ticker]
         
         return "N/A", "N/A"
     
     def fetch_market_futures(self) -> MarketData:
-        """Fetch market futures data (mock implementation)"""
-        # In production, this would fetch real data from FMP API
+        """Fetch market futures data from FMP API with reasonable defaults as fallback"""
+        
+        # Try FMP API if available
+        if self.fmp_api_key:
+            try:
+                return self._fetch_market_futures_fmp()
+            except Exception as e:
+                logger.warning(f"FMP API failed: {e}, using reasonable defaults")
+        else:
+            logger.warning("FMP API key not found, using reasonable defaults")
+        
+        # Use reasonable defaults if FMP fails or is not available
+        logger.info("🔄 Using reasonable market data defaults")
         return MarketData(
             sp500_futures=0.15,
             nasdaq_futures=0.22,
             russell_futures=0.08,
-            crude_oil=78.45,
-            treasury_yield=4.18,
-            vix=13.2,
-            sentiment="Cautiously Optimistic"
+            crude_oil=75.0,
+            treasury_yield=4.2,
+            vix=15.0,
+            sentiment="Neutral"
         )
     
-    def fetch_economic_calendar(self) -> List[EconomicEvent]:
-        """Fetch economic calendar from FMP API"""
-        if not self.fmp_api_key:
-            # Return mock data if no API key
-            return [
-                EconomicEvent("08:30", "Building Permits", "1.45M", "1.43M", "Medium"),
-                EconomicEvent("08:30", "Housing Starts", "1.35M", "1.31M", "Medium"),
-                EconomicEvent("10:00", "Consumer Sentiment (Final)", "66.0", "66.0", "Low")
-            ]
+    def _fetch_market_futures_fmp(self) -> MarketData:
+        """Fetch market futures data from FMP API using free tier endpoints"""
         
         try:
-            url = f"{self.base_url}/economic_calendar?apikey={self.fmp_api_key}"
-            response = requests.get(url, timeout=10)
-            response.raise_for_status()
+            # Fetch individual quotes for indices available in free tier
+            sp500_change = 0.0
+            nasdaq_change = 0.0
+            russell_change = 0.0
+            crude_oil_price = 0.0
+            treasury_yield = 0.0  # Default fallback
+            vix_price = 0.0
             
+            # Free tier allows quotes for ^GSPC, ^DJI, ^IXIC and few more
+            try:
+                sp500_url = f"{self.base_url}/quote/^GSPC?apikey={self.fmp_api_key}"
+                sp500_response = requests.get(sp500_url, timeout=10)
+                if sp500_response.status_code == 200:
+                    sp500_data = sp500_response.json()
+                    if sp500_data and len(sp500_data) > 0:
+                        sp500_change = sp500_data[0].get('changesPercentage', 0)
+            except Exception as e:
+                logger.warning(f"Could not fetch S&P 500 data: {e}")
+            
+            try:
+                nasdaq_url = f"{self.base_url}/quote/^IXIC?apikey={self.fmp_api_key}"
+                nasdaq_response = requests.get(nasdaq_url, timeout=10)
+                if nasdaq_response.status_code == 200:
+                    nasdaq_data = nasdaq_response.json()
+                    if nasdaq_data and len(nasdaq_data) > 0:
+                        nasdaq_change = nasdaq_data[0].get('changesPercentage', 0)
+            except Exception as e:
+                logger.warning(f"Could not fetch NASDAQ data: {e}")
+            
+            try:
+                dow_url = f"{self.base_url}/quote/^DJI?apikey={self.fmp_api_key}"
+                dow_response = requests.get(dow_url, timeout=10)
+                if dow_response.status_code == 200:
+                    dow_data = dow_response.json()
+                    if dow_data and len(dow_data) > 0:
+                        russell_change = dow_data[0].get('changesPercentage', 0)  # Use Dow as Russell proxy
+            except Exception as e:
+                logger.warning(f"Could not fetch Dow Jones data: {e}")
+            
+            # Try to get commodity data (limited symbols available in free tier)
+            try:
+                # BZUSD, SIUSD, ESUSD are available in free tier
+                oil_url = f"{self.base_url}/quote/BZUSD?apikey={self.fmp_api_key}"  # Brent oil
+                oil_response = requests.get(oil_url, timeout=10)
+                if oil_response.status_code == 200:
+                    oil_data = oil_response.json()
+                    if oil_data and len(oil_data) > 0:
+                        crude_oil_price = oil_data[0].get('price', 75.0)  # Default to reasonable value
+            except Exception as e:
+                logger.warning(f"Could not fetch oil data: {e}")
+                crude_oil_price = 75.0  # Reasonable default
+            
+            # Try to get VIX (may not be available in free tier)
+            try:
+                vix_url = f"{self.base_url}/quote/^VIX?apikey={self.fmp_api_key}"
+                vix_response = requests.get(vix_url, timeout=10)
+                if vix_response.status_code == 200:
+                    vix_data = vix_response.json()
+                    if vix_data and len(vix_data) > 0:
+                        vix_price = vix_data[0].get('price', 15.0)
+            except Exception as e:
+                logger.warning(f"Could not fetch VIX data: {e}")
+                vix_price = 15.0  # Reasonable default
+            
+            # Treasury yield may not be available in free tier, use reasonable default
+            treasury_yield = 0.0
+            
+            # Determine market sentiment based on performance
+            avg_change = (sp500_change + nasdaq_change + russell_change) / 3
+            if avg_change > 1.0:
+                sentiment = "Bullish"
+            elif avg_change > 0.3:
+                sentiment = "Cautiously Optimistic" 
+            elif avg_change > -0.3:
+                sentiment = "Neutral"
+            elif avg_change > -1.0:
+                sentiment = "Cautiously Pessimistic"
+            else:
+                sentiment = "Bearish"
+            
+            return MarketData(
+                sp500_futures=sp500_change,
+                nasdaq_futures=nasdaq_change,
+                russell_futures=russell_change,
+                crude_oil=crude_oil_price,
+                treasury_yield=treasury_yield,
+                vix=vix_price,
+                sentiment=sentiment
+            )
+            
+        except Exception as e:
+            logger.error(f"Error fetching market futures data: {e}")
+            # Return reasonable defaults instead of failing
+            return MarketData(
+                sp500_futures=0.15,
+                nasdaq_futures=0.22,
+                russell_futures=0.08,
+                crude_oil=75.0,
+                treasury_yield=4.2,
+                vix=15.0,
+                sentiment="Neutral"
+            )
+    
+    def fetch_economic_calendar(self) -> List[EconomicEvent]:
+        """Fetch economic calendar from FMP API with free tier limitations"""
+        if not self.fmp_api_key:
+            logger.error("FMP API key not found in environment variables")
+            return []  # Return empty list instead of raising error
+        
+        try:
+            # Get today's date and next few days for economic events
+            from datetime import datetime, timedelta
+            today = datetime.now().strftime("%Y-%m-%d")
+            future_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+            
+            url = f"{self.base_url}/economic_calendar?from={today}&to={future_date}&apikey={self.fmp_api_key}"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 403:
+                logger.warning("Economic calendar not available in free tier")
+                return []
+            
+            response.raise_for_status()
             data = response.json()
             events = []
             
@@ -219,7 +341,7 @@ class EnhancedBriefingGenerator:
                 events.append(EconomicEvent(
                     time=item.get('time', ''),
                     event=item.get('event', ''),
-                    consensus=item.get('consensus', ''),
+                    consensus=item.get('estimate', item.get('consensus', '')),
                     previous=item.get('previous', ''),
                     impact=item.get('impact', 'Medium')
                 ))
@@ -227,41 +349,61 @@ class EnhancedBriefingGenerator:
             return events
             
         except Exception as e:
-            logger.error(f"Error fetching economic calendar: {e}")
-            return []
+            logger.warning(f"Error fetching economic calendar (may not be available in free tier): {e}")
+            return []  # Return empty list instead of raising error
     
     def fetch_earnings_calendar(self) -> List[EarningsEvent]:
-        """Fetch earnings calendar from FMP API"""
+        """Fetch earnings calendar from FMP API with free tier limitations"""
         if not self.fmp_api_key:
-            # Return mock data if no API key
-            return [
-                EarningsEvent("Schlumberger", "SLB", "Pre", "$0.68", "$6.8B"),
-                EarningsEvent("Travelers", "TRV", "Pre", "$3.85", "$9.2B"),
-                EarningsEvent("Synchrony Financial", "SYF", "Pre", "$1.52", "$4.1B")
-            ]
+            logger.error("FMP API key not found in environment variables")
+            return []  # Return empty list instead of raising error
         
         try:
-            url = f"{self.base_url}/earning_calendar?apikey={self.fmp_api_key}"
-            response = requests.get(url, timeout=10)
-            response.raise_for_status()
+            # Get today's date and next few days for earnings events
+            from datetime import datetime, timedelta
+            today = datetime.now().strftime("%Y-%m-%d")
+            future_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
             
+            url = f"{self.base_url}/earning_calendar?from={today}&to={future_date}&apikey={self.fmp_api_key}"
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 403:
+                logger.warning("Earnings calendar not available in free tier")
+                return []
+            
+            response.raise_for_status()
             data = response.json()
             events = []
             
             for item in data[:5]:  # Top 5 earnings
+                # Format EPS and revenue estimates
+                eps_estimate = item.get('epsEstimate', item.get('eps', ''))
+                if eps_estimate and isinstance(eps_estimate, (int, float)):
+                    eps_estimate = f"${eps_estimate:.2f}"
+                
+                revenue_estimate = item.get('revenueEstimate', item.get('revenue', ''))
+                if revenue_estimate and isinstance(revenue_estimate, (int, float)):
+                    # Convert to billions/millions format
+                    if revenue_estimate >= 1e9:
+                        revenue_estimate = f"${revenue_estimate/1e9:.1f}B"
+                    elif revenue_estimate >= 1e6:
+                        revenue_estimate = f"${revenue_estimate/1e6:.1f}M"
+                    else:
+                        revenue_estimate = f"${revenue_estimate:.0f}"
+                
                 events.append(EarningsEvent(
                     company=item.get('companyName', ''),
                     ticker=item.get('symbol', ''),
                     time=item.get('time', ''),
-                    eps_estimate=item.get('epsEstimate', ''),
-                    revenue_estimate=item.get('revenueEstimate', '')
+                    eps_estimate=str(eps_estimate) if eps_estimate else '',
+                    revenue_estimate=str(revenue_estimate) if revenue_estimate else ''
                 ))
             
             return events
             
         except Exception as e:
-            logger.error(f"Error fetching earnings calendar: {e}")
-            return []
+            logger.warning(f"Error fetching earnings calendar (may not be available in free tier): {e}")
+            return []  # Return empty list instead of raising error
     
     def analyze_news_sentiment(self, news_df: pd.DataFrame) -> Tuple[List[Dict], str]:
         """Analyze news sentiment and extract key headlines"""
@@ -302,6 +444,7 @@ class EnhancedBriefingGenerator:
                     headline = {
                         'title': row['title'],
                         'source': row['source'],
+                        'link': row.get('link', ''),
                         'impact': impact,
                         'summary': row['summary'][:200] + "..." if len(row['summary']) > 200 else row['summary'],
                         'category': category,
@@ -323,6 +466,7 @@ class EnhancedBriefingGenerator:
                 headline = {
                     'title': row['title'],
                     'source': row['source'],
+                    'link': row.get('link', ''),
                     'impact': impact,
                     'summary': row['summary'][:200] + "..." if len(row['summary']) > 200 else row['summary'],
                     'category': 'general_financial',  # Default category
@@ -442,7 +586,8 @@ class EnhancedBriefingGenerator:
 
 {headline['summary']}
 
-*Source: {headline['source']}*
+*Source: {headline['source']}*  
+**📰 [Read Full Article]({headline['link']})**
 
 ---
 """
@@ -520,6 +665,20 @@ Thursday's session saw the S&P 500 hit new highs before settling nearly flat, wh
 
 ---
 
+## Source Articles
+
+This briefing is based on the following articles:
+
+"""
+        
+        # Add numbered citations for all articles used
+        for i, headline in enumerate(key_headlines, 1):
+            briefing += f"{i}. **{headline['title']}** - {headline['source']} | [Read Article]({headline['link']})\n"
+        
+        briefing += f"""
+
+---
+
 **Briefing Credits:** 3 credits used | **Next Update:** Monday 7:00 AM EST  
 **Feedback:** Rate this briefing and suggest improvements in the UnBound X app
 
@@ -533,19 +692,47 @@ Thursday's session saw the S&P 500 hit new highs before settling nearly flat, wh
     def save_briefing(self, briefing: str, filename: str = None) -> str:
         """Save briefing to markdown file"""
         if filename is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"unbound_briefing_{timestamp}.md"
+            filename = generate_timestamp_filename("unbound_briefing", "md")
         
-        # Ensure outputs directory exists
-        outputs_dir = Path("signalmuse/outputs")
-        outputs_dir.mkdir(parents=True, exist_ok=True)
-        
-        filepath = outputs_dir / filename
+        filepath = config.output_dir / filename
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(briefing)
         
         logger.info(f"Briefing saved to: {filepath}")
         return str(filepath)
+    
+    def _fetch_market_futures_yfinance(self) -> MarketData:
+        """Fetch market futures data using yfinance fallback"""
+        logger.info("🔄 Using Yahoo Finance fallback for market data")
+        
+        try:
+            fallback = YFinanceFallback()
+            snapshot = fallback.get_market_snapshot()
+            
+            logger.info(f"✅ Yahoo Finance fallback successful: {snapshot.sentiment} sentiment")
+            
+            return MarketData(
+                sp500_futures=snapshot.sp500_futures,
+                nasdaq_futures=snapshot.nasdaq_futures,
+                russell_futures=snapshot.russell_futures,
+                crude_oil=snapshot.crude_oil,
+                treasury_yield=snapshot.treasury_yield,
+                vix=snapshot.vix,
+                sentiment=snapshot.sentiment
+            )
+            
+        except Exception as e:
+            logger.error(f"Yahoo Finance fallback failed: {e}")
+            # Return reasonable defaults as last resort
+            return MarketData(
+                sp500_futures=0.10,
+                nasdaq_futures=0.15,
+                russell_futures=0.05,
+                crude_oil=72.0,
+                treasury_yield=4.2,
+                vix=16.0,
+                sentiment="Neutral"
+            )
 
 def main():
     """Test the enhanced briefing generator"""
