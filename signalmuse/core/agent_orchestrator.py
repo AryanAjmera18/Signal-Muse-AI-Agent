@@ -37,9 +37,9 @@ class OrchestrationConfig:
     enable_sentiment_analysis: bool = True
     enable_economic_calendar: bool = True
     enable_market_data: bool = True
-    max_articles_per_source: int = 20
-    briefing_format: str = "unbound_x"  # "unbound_x" or "detailed"
-    save_intermediate_results: bool = True
+    max_articles_per_source: int = 10
+    briefing_format: str = "unbound_x" 
+    save_intermediate_results: bool = False
 
 class AgentOrchestrator:
     """Orchestrates the multi-agent financial news analysis system"""
@@ -283,7 +283,7 @@ class AgentOrchestrator:
             
             # Process top 5 articles with individual AI analysis
             logger.info("🤖 Processing top 5 articles with individual AI calls")
-            processed_articles = await processor.process_top_articles(df, num_articles=5)
+            processed_articles = await processor.process_top_articles(df, num_articles=7)
             
             # Get market data from Agent 3 results
             agent3_result = self.results.get('agent3')

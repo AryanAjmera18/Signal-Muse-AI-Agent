@@ -1,0 +1,147 @@
+{
+  "execution_summary": {
+    "total_agents": 4,
+    "successful_agents": 4,
+    "timestamp": "2025-08-05T15:00:01.444733"
+  },
+  "agent_results": {
+    "agent1": {
+      "success": true,
+      "data": {
+        "articles_count": 100,
+        "sources_count": 10,
+        "categories": {
+          "general_financial": 30,
+          "investing_markets": 30,
+          "cryptocurrency": 20,
+          "economy_policy": 10,
+          "fintech": 10
+        },
+        "filepath": "signalmuse\\data\\real\\agent1_news_20250805_145708.csv",
+        "sample_articles": [
+          {
+            "title": "Prediction markets see Hassett and Warsh as Fed chair frontrunners as Trump talks up the 'Kevins'",
+            "link": "https://www.cnbc.com/2025/08/05/prediction-markets-see-hassett-and-warsh-as-fed-chair-frontrunners-as-trump-talks-up-the-kevins.html",
+            "summary": "In a wide-ranging interview on CNBC's \"Squawk Box,\" Trump spoke highly of Hassett and Warsh as potential candidates to replace Powell.",
+            "published": "2025-08-05 18:54:07",
+            "source": "CNBC World News",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "108181877",
+            "author": "",
+            "tags": [],
+            "id": "8de34c78b269d419449de3adf13dc1e7"
+          },
+          {
+            "title": "GOP Could Risk 'Dummy-Mander' With Texas Redistricting Bid, Says Sabato",
+            "link": "https://www.bloomberg.com/news/videos/2025-08-05/gop-risks-dummy-mander-with-tx-redistricting-sabato-video",
+            "summary": "Larry Sabato, director of The Center for Politics at the University of Virginia, breaks down the potential fallout from both the Republican redistricting gambit and Democrats' response ahead of the 2026 midterm election (Source: Bloomberg)",
+            "published": "2025-08-05 18:50:35",
+            "source": "Bloomberg Markets",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "https://www.bloomberg.com/news/videos/2025-08-05/gop-risks-dummy-mander-with-tx-redistricting-sabato-video",
+            "author": "",
+            "tags": [],
+            "id": "97668c7129cf0f832fca4613efba10f3"
+          },
+          {
+            "title": "Coinbase shares slide Tuesday as crypto play takes double-digit fall from July record",
+            "link": "https://www.cnbc.com/2025/08/05/coinbase-shares-slide-tuesday-as-crypto-play-takes-double-digit-fall-from-july-record.html",
+            "summary": "Shares of the cryptocurrency trading platform have collapsed since notching a record on July 18.",
+            "published": "2025-08-05 18:47:43",
+            "source": "CNBC World News",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "108181758",
+            "author": "",
+            "tags": [],
+            "id": "046b2aaeda7f73e9ab9105b057f304d6"
+          },
+          {
+            "title": "Pfizer boosts profit estimate, even as the drug giant absorbs tariffs",
+            "link": "https://www.marketwatch.com/story/pfizer-boosts-2025-profit-estimate-in-a-sign-of-confidence-b53242ae?mod=mw_rss_topstories",
+            "summary": "Pfizer Inc.\u2019s stock was rallying Tuesday after the drug giant lifted its 2025 adjusted profit estimate, on the heels of a 10% jump in second-quarter revenue on strength in its Vyndaqel heart medication and its COVID-19 drugs.",
+            "published": "2025-08-05 18:44:00",
+            "source": "MarketWatch Top Stories",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "WP-MKTW-0004366534",
+            "author": "Steve Gelsi",
+            "tags": [],
+            "id": "9da1302c28479d49ea7e42b11508a7df"
+          },
+          {
+            "title": "AI is already impacting the labor market, starting with young tech workers, Goldman economist says",
+            "link": "https://www.cnbc.com/2025/08/05/ai-labor-market-young-tech-workers-goldman-economist.html",
+            "summary": "Unemployment rates among tech workers between 20 and 30 years old jumped by 3 percentage points since the start of this year, said Goldman Sachs' Joseph Briggs.",
+            "published": "2025-08-05 18:40:03",
+            "source": "CNBC World News",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "108181785",
+            "author": "",
+            "tags": [],
+            "id": "ce8045d132f1ea60600e8b7e3ddfeddb"
+          }
+        ]
+      },
+      "timestamp": "2025-08-05T14:57:08.403435",
+      "error": null
+    },
+    "agent2": {
+      "success": true,
+      "data": {
+        "economic_events": [],
+        "earnings_events": [],
+        "economic_count": 0,
+        "earnings_count": 0
+      },
+      "timestamp": "2025-08-05T14:57:10.322218",
+      "error": null
+    },
+    "agent3": {
+      "success": true,
+      "data": {
+        "market_data": {
+          "sp500_futures": -0.4405286343612335,
+          "nasdaq_futures": -0.6492391560964093,
+          "russell_futures": 0.2657493844524624,
+          "crude_oil": 65.23999786376953,
+          "treasury_yield": NaN,
+          "vix": 17.829999923706055,
+          "sentiment": "Neutral",
+          "sp500_current": 6301.8798828125,
+          "nasdaq_current": 20909.8125,
+          "russell_current": 2219.35498046875
+        },
+        "futures_summary": {
+          "sp500_change": -0.4405286343612335,
+          "nasdaq_change": -0.6492391560964093,
+          "russell_change": 0.2657493844524624,
+          "crude_oil": 65.23999786376953,
+          "treasury_yield": NaN,
+          "vix": 17.829999923706055,
+          "sentiment": "Neutral",
+          "sp500_current": 6301.8798828125,
+          "nasdaq_current": 20909.8125,
+          "russell_current": 2219.35498046875
+        }
+      },
+      "timestamp": "2025-08-05T14:57:21.070378",
+      "error": null
+    },
+    "agent4": {
+      "success": true,
+      "data": {
+        "briefing_filepath": "signalmuse\\outputs\\Current_Brief_20250805_150001.md",
+        "briefing_length": 6752,
+        "format": "individual_ai_investor_briefing",
+        "articles_processed": 7,
+        "individual_ai_calls": 7
+      },
+      "timestamp": "2025-08-05T15:00:01.444733",
+      "error": null
+    }
+  }
+}
