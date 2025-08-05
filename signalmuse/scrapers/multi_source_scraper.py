@@ -56,12 +56,6 @@ class MultiSourceScraper:
                 category='general_financial',
                 priority=1
             ),
-            'yahoo_finance': RSSFeed(
-                name='Yahoo Finance',
-                url='https://feeds.finance.yahoo.com/rss/2.0/headline',
-                category='general_financial',
-                priority=1
-            ),
             'bloomberg_markets': RSSFeed(
                 name='Bloomberg Markets',
                 url='https://feeds.bloomberg.com/markets/news.rss',

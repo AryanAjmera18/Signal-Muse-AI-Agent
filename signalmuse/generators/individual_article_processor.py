@@ -267,6 +267,16 @@ class IndividualArticleProcessor:
 
 ---
 
+## Current Market Data
+
+**Current Index Levels:**
+
+- **S&P 500:** {market_data.get('sp500_current', 0.0):.2f}
+- **Nasdaq Composite:** {market_data.get('nasdaq_current', 0.0):.2f}
+- **Russell 2000:** {market_data.get('russell_current', 0.0):.2f}
+
+---
+
 ## Top Market News"""
             briefing_sections.append(market_section)
         

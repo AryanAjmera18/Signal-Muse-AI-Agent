@@ -1,0 +1,147 @@
+{
+  "execution_summary": {
+    "total_agents": 4,
+    "successful_agents": 4,
+    "timestamp": "2025-08-05T14:20:54.721441"
+  },
+  "agent_results": {
+    "agent1": {
+      "success": true,
+      "data": {
+        "articles_count": 100,
+        "sources_count": 10,
+        "categories": {
+          "general_financial": 30,
+          "investing_markets": 30,
+          "cryptocurrency": 20,
+          "economy_policy": 10,
+          "fintech": 10
+        },
+        "filepath": "signalmuse\\data\\real\\agent1_news_20250805_141915.csv",
+        "sample_articles": [
+          {
+            "title": "Russia's economy 'stinks,' Trump says, and lower oil prices will stop its war machine",
+            "link": "https://www.cnbc.com/2025/08/05/russian-economy-stinks-trump-says-and-low-oil-prices-will-stop-war.html",
+            "summary": "\"Putin will stop killing people if you get energy down another $10 a barrel. He's going to have no choice because his economy stinks,\" Trump said Tuesday.",
+            "published": "2025-08-05 18:15:18",
+            "source": "CNBC World News",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "108181600",
+            "author": "",
+            "tags": [],
+            "id": "98dcee260f59547cdd418f11f8fa8047"
+          },
+          {
+            "title": "AI is already impacting the labor market, starting with young tech workers, Goldman economist says",
+            "link": "https://www.cnbc.com/2025/08/05/ai-labor-market-young-tech-workers-goldman-economist.html",
+            "summary": "Unemployment rates among tech workers between 20 and 30 years old jumped by 3 percentage points since the start of this year, said Goldman Sachs' Joseph Briggs.",
+            "published": "2025-08-05 18:10:00",
+            "source": "CNBC World News",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "108181785",
+            "author": "",
+            "tags": [],
+            "id": "4ef740b2f2cf31c3b7337b74d3251af9"
+          },
+          {
+            "title": "Nvidia says its AI chips don't have a 'kill switch' after Chinese accusation",
+            "link": "https://www.cnbc.com/2025/08/05/nvidia-ai-chips-no-kill-switch-h20.html",
+            "summary": "The statement is an example of how Nvidia is navigating becoming a center of geopolitical conflict.",
+            "published": "2025-08-05 18:07:22",
+            "source": "CNBC World News",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "108181806",
+            "author": "",
+            "tags": [],
+            "id": "dfb89741935b3ffb678a6843036c3368"
+          },
+          {
+            "title": "College Endowments Post Best Investment Gains Since 2021",
+            "link": "https://www.bloomberg.com/news/videos/2025-08-05/college-endowments-post-best-investment-gains-since-2021-video",
+            "summary": "US college endowments overseeing $500 million or more posted median returns of 11.5% for the year through June, the best performance since 2021. Bloomberg's Janet Lorin has more on the story.  (Source: Bloomberg)",
+            "published": "2025-08-05 18:07:05",
+            "source": "Bloomberg Markets",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "https://www.bloomberg.com/news/videos/2025-08-05/college-endowments-post-best-investment-gains-since-2021-video",
+            "author": "",
+            "tags": [],
+            "id": "61ec77652bfd54b114499d9005289d86"
+          },
+          {
+            "title": "Caterpillar expects up to $1.5 billion in tariff costs this year, and the stock is rising",
+            "link": "https://www.marketwatch.com/story/caterpillars-stock-falls-after-profit-misses-expectations-again-to-offset-a-raised-outlook-d92aa1b6?mod=mw_rss_topstories",
+            "summary": "Caterpillar shares are rising in morning trades, after the maker of construction and mining equipment missed second-quarter profit expectations but beat on sales and raised its full-year growth outlook.",
+            "published": "2025-08-05 18:05:00",
+            "source": "MarketWatch Top Stories",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "WP-MKTW-0004366478",
+            "author": "James Rogers",
+            "tags": [],
+            "id": "1b90296f0480780ec01492844cca05b0"
+          }
+        ]
+      },
+      "timestamp": "2025-08-05T14:19:15.928304",
+      "error": null
+    },
+    "agent2": {
+      "success": true,
+      "data": {
+        "economic_events": [],
+        "earnings_events": [],
+        "economic_count": 0,
+        "earnings_count": 0
+      },
+      "timestamp": "2025-08-05T14:19:17.715799",
+      "error": null
+    },
+    "agent3": {
+      "success": true,
+      "data": {
+        "market_data": {
+          "sp500_futures": -0.16913152926368785,
+          "nasdaq_futures": -0.22642886270469814,
+          "russell_futures": 0.504479558543272,
+          "crude_oil": 65.26000213623047,
+          "treasury_yield": 4.206000328063965,
+          "vix": 17.40999984741211,
+          "sentiment": "Neutral",
+          "sp500_current": 6309.1201171875,
+          "nasdaq_current": 20976.080078125,
+          "russell_current": 2225.341552734375
+        },
+        "futures_summary": {
+          "sp500_change": -0.16913152926368785,
+          "nasdaq_change": -0.22642886270469814,
+          "russell_change": 0.504479558543272,
+          "crude_oil": 65.26000213623047,
+          "treasury_yield": 4.206000328063965,
+          "vix": 17.40999984741211,
+          "sentiment": "Neutral",
+          "sp500_current": 6309.1201171875,
+          "nasdaq_current": 20976.080078125,
+          "russell_current": 2225.341552734375
+        }
+      },
+      "timestamp": "2025-08-05T14:19:20.647861",
+      "error": null
+    },
+    "agent4": {
+      "success": true,
+      "data": {
+        "briefing_filepath": "signalmuse\\outputs\\Current_Brief_20250805_142054.md",
+        "briefing_length": 4822,
+        "format": "individual_ai_investor_briefing",
+        "articles_processed": 5,
+        "individual_ai_calls": 5
+      },
+      "timestamp": "2025-08-05T14:20:54.721441",
+      "error": null
+    }
+  }
+}

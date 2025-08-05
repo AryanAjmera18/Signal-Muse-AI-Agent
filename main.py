@@ -4,10 +4,9 @@ Multi-Agent Financial News Analysis System
 
 This showcases the complete SignalMuse system with:
 1. Multi-source RSS scraping
-2. FinBERT sentiment analysis API
-3. Enhanced morning briefing generation
-4. Agent orchestration
-5. Individual AI processing for investor briefings
+2. Enhanced morning briefing generation
+3. Agent orchestration
+4. Individual AI processing for investor briefings
 
 Usage: python main.py
 """
@@ -22,29 +21,6 @@ from signalmuse.core.agent_orchestrator import AgentOrchestrator, OrchestrationC
 
 logger = get_logger(__name__)
 
-def print_banner():
-    """Print system banner"""
-    banner = """
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                    SignalMuse Multi-Agent Financial System                    ║
-║                                                                              ║
-║  📰 Agent 1: News Collection & Sentiment Analysis                           ║
-║  📅 Agent 2: Economic Calendar & Events                                     ║
-║  📊 Agent 3: Market Data & Futures                                          ║
-║  📝 Agent 4: Report Generation & Synthesis                                  ║
-║                                                                              ║
-║  Powered by: RSS Feeds | FinBERT | Groq LLM | UnBound X Format             ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-    """
-    print(banner)
-
-# Dependency checking removed - let the system fail fast if dependencies are missing
-
-# Individual demo functions removed - using orchestrator instead
-
-# FinBERT API demo removed - handled by orchestrator
-
-# Enhanced briefing demo removed - handled by orchestrator
 
 async def run_analysis():
     """Run the complete multi-agent system analysis"""
@@ -58,7 +34,6 @@ async def run_analysis():
             enable_sentiment_analysis=True,
             enable_economic_calendar=True,
             enable_market_data=True,
-            enable_finbert_api=False,  # Disable to avoid API dependency
             max_articles_per_source=10,
             briefing_format="unbound_x",
             save_intermediate_results=True
@@ -137,7 +112,7 @@ def show_results_summary(result):
 
 async def main():
     """Main analysis function"""
-    print_banner()
+    
     
     try:
         # Run the complete multi-agent analysis

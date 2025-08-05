@@ -103,7 +103,6 @@ main.py → AgentOrchestrator → 4 Agents → Current_Brief_YYYYMMDD_HHMMSS.md
 ### AI & LLM Stack
 - **Groq API**: `llama3-70b-8192` model
 - **Instructor**: Structured LLM outputs with Pydantic
-- **FinBERT**: Financial sentiment analysis (optional)
 
 ### Data Processing
 - **pandas**: Article processing and analysis
@@ -116,7 +115,6 @@ OrchestrationConfig(
     enable_sentiment_analysis=True,
     enable_economic_calendar=True, 
     enable_market_data=True,
-    enable_finbert_api=False,  # Optional FinBERT microservice
     max_articles_per_source=10,
     briefing_format="unbound_x",
     save_intermediate_results=True

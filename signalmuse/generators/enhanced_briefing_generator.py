@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 import instructor
 from groq import Groq
+import yfinance as yf
 
 from signalmuse.utils.utils import get_logger, config, save_dataframe_to_csv, generate_timestamp_filename
 
@@ -57,7 +58,11 @@ class MarketData:
     crude_oil: float
     treasury_yield: float
     vix: float
-    sentiment: str
+    sentiment: str = "Neutral"
+    # Current market data
+    sp500_current: float = 0.0
+    nasdaq_current: float = 0.0
+    russell_current: float = 0.0
 
 @dataclass
 class EconomicEvent:
@@ -184,101 +189,238 @@ class EnhancedBriefingGenerator:
         return "N/A", "N/A"
     
     def fetch_market_futures(self) -> MarketData:
-        """Fetch market futures data from FMP API with reasonable defaults as fallback"""
-        
-        # Try FMP API if available
-        if self.fmp_api_key:
-            try:
-                return self._fetch_market_futures_fmp()
-            except Exception as e:
-                logger.warning(f"FMP API failed: {e}, using reasonable defaults")
-        else:
-            logger.warning("FMP API key not found, using reasonable defaults")
-        
-        # Use reasonable defaults if FMP fails or is not available
-        logger.info("🔄 Using reasonable market data defaults")
-        return MarketData(
-            sp500_futures=0.15,
-            nasdaq_futures=0.22,
-            russell_futures=0.08,
-            crude_oil=75.0,
-            treasury_yield=4.2,
-            vix=15.0,
-            sentiment="Neutral"
-        )
-    
-    def _fetch_market_futures_fmp(self) -> MarketData:
-        """Fetch market futures data from FMP API using free tier endpoints"""
+        """Fetch market futures and current data using Yahoo Finance"""
         
         try:
-            # Fetch individual quotes for indices available in free tier
+            # Fetch futures data
+            futures_data = self._fetch_futures_data()
+            
+            # Fetch current market data  
+            current_data = self._fetch_current_market_data()
+            
+            # Combine both datasets
+            return MarketData(
+                sp500_futures=futures_data.sp500_futures,
+                nasdaq_futures=futures_data.nasdaq_futures,
+                russell_futures=futures_data.russell_futures,
+                crude_oil=futures_data.crude_oil,
+                treasury_yield=futures_data.treasury_yield,
+                vix=futures_data.vix,
+                sentiment=futures_data.sentiment,
+                sp500_current=current_data.sp500_futures,  # Using futures field as current
+                nasdaq_current=current_data.nasdaq_futures,  # Using futures field as current
+                russell_current=current_data.russell_futures  # Using futures field as current
+            )
+            
+        except Exception as e:
+            logger.error(f"Error fetching market data: {e}")
+            # Return all zeros for debugging
+            return MarketData(
+                sp500_futures=0.0,
+                nasdaq_futures=0.0,
+                russell_futures=0.0,
+                crude_oil=0.0,
+                treasury_yield=0.0,
+                vix=0.0,
+                sentiment="ERROR - CHECK LOGS",
+                sp500_current=0.0,
+                nasdaq_current=0.0,
+                russell_current=0.0
+            )
+
+
+
+    def _fetch_current_market_data(self) -> MarketData:
+        """Fetch market futures data from Yahoo Finance using yfinance"""
+
+        try:
+            # Symbol mappings
+            symbols = {
+                'sp500': '^GSPC',           # S&P 500 Index
+                'nasdaq': '^IXIC',          # Nasdaq Composite
+                'russell': '^RUT',          # Russell 2000
+                'vix': '^VIX',              # CBOE Volatility Index
+                'crude_oil': 'CL=F',        # WTI Crude Oil Futures
+                'treasury_10y': '^TNX'      # 10-Year Treasury Yield
+            }
+            
+            # Initialize default values
+            sp500_current = 0.0
+            nasdaq_current = 0.0
+            russell_current = 0.0
+            crude_oil_price = 0.0
+            treasury_yield = 0.0
+            vix_price = 0.0
+            
+            # Download data for all symbols at once (more efficient)
+            tickers = list(symbols.values())
+            data = yf.download(
+                tickers=tickers,
+                period='2d',  # Get 2 days to calculate change from previous close
+                interval='1d',
+                group_by='ticker',
+                auto_adjust=True,
+                progress=False
+            )
+            
+            # def safe_get_change(symbol_key):
+            #     """Safely calculate percentage change from previous close"""
+            #     try:
+            #         symbol = symbols[symbol_key]
+            #         if len(data[symbol]) >= 2:
+            #             prev_close = data[symbol]['Close'].iloc[-2]
+            #             current_close = data[symbol]['Close'].iloc[-1]
+            #             pct_change = ((current_close - prev_close) / prev_close) * 100
+            #             return pct_change
+            #         else:
+            #             # Fallback: use day's open vs close
+            #             current_open = data[symbol]['Open'].iloc[-1]
+            #             current_close = data[symbol]['Close'].iloc[-1]
+            #             pct_change = ((current_close - current_open) / current_open) * 100
+            #             return pct_change
+            #     except Exception as e:
+            #         logger.warning(f"Could not calculate change for {symbol_key}: {e}")
+            #         return 0.0
+            
+            def safe_get_price(symbol_key, default_value):
+                """Safely get current price"""
+                try:
+                    symbol = symbols[symbol_key]
+                    return float(data[symbol]['Close'].iloc[-1])
+                except Exception as e:
+                    logger.warning(f"Could not fetch price for {symbol_key}: {e}")
+                    return default_value
+            
+            # Calculate percentage changes (futures-like behavior)
+            sp500_current = safe_get_price('sp500', 0.0)
+            nasdaq_current = safe_get_price('nasdaq', 0.0)  
+            russell_current = safe_get_price('russell', 0.0)
+            
+            # Get current prices
+            crude_oil_price = safe_get_price('crude_oil', 0.0)
+            vix_price = safe_get_price('vix', 0.0)
+            
+            # Treasury yield (^TNX gives yield in percent, no division needed)
+            try:
+                treasury_yield = safe_get_price('treasury_10y', 0.0)
+            except Exception as e:
+                logger.warning(f"Could not fetch Treasury yield: {e}")
+                treasury_yield = 0.0
+            
+            # # Calculate market sentiment (same logic as original)
+            # avg_change = (sp500_change + nasdaq_change + russell_change) / 3
+            # if avg_change > 1.0:
+            #     sentiment = "Bullish"
+            # elif avg_change > 0.3:
+            #     sentiment = "Cautiously Optimistic" 
+            # elif avg_change > -0.3:
+            #     sentiment = "Neutral"
+            # elif avg_change > -1.0:
+            #     sentiment = "Cautiously Pessimistic"
+            # else:
+            #     sentiment = "Bearish"
+            
+            return MarketData(
+                sp500_futures=sp500_current,
+                nasdaq_futures=nasdaq_current,
+                russell_futures=russell_current,
+                crude_oil=crude_oil_price,
+                treasury_yield=treasury_yield,
+                vix=vix_price
+            )
+            
+        except Exception as e:
+            logger.error(f"Error fetching market futures data: {e}")
+            # Return reasonable defaults instead of failing (same as original)
+            return MarketData(
+                sp500_futures=0.0,
+                nasdaq_futures=0.0,
+                russell_futures=0.0,
+                crude_oil=0.0,
+                treasury_yield=0.0,
+                vix=0.0,
+                sentiment="BAD THING HAPPENED - DEBUG COMMENT"
+            )
+
+    def _fetch_futures_data(self) -> MarketData:
+        """Fetch market futures data from Yahoo Finance using yfinance"""
+
+        try:
+            # Symbol mappings
+            symbols = {
+                'sp500': 'ES=F',     # E-mini S&P 500 futures
+                'nasdaq': 'NQ=F',    # E-mini Nasdaq-100 futures  
+                'russell': 'RTY=F',  # E-mini Russell 2000 futures
+                'crude_oil': 'CL=F', # WTI Crude (already correct)
+                'treasury_10y': '^TNX',
+                'vix': '^VIX'
+            }
+
+            
+            # Initialize default values
             sp500_change = 0.0
             nasdaq_change = 0.0
             russell_change = 0.0
             crude_oil_price = 0.0
-            treasury_yield = 0.0  # Default fallback
+            treasury_yield = 0.0
             vix_price = 0.0
             
-            # Free tier allows quotes for ^GSPC, ^DJI, ^IXIC and few more
+            # Download data for all symbols at once (more efficient)
+            tickers = list(symbols.values())
+            data = yf.download(
+                tickers=tickers,
+                period='2d',  # Get 2 days to calculate change from previous close
+                interval='1d',
+                group_by='ticker',
+                auto_adjust=True,
+                progress=False
+            )
+            
+            def safe_get_change(symbol_key):
+                """Safely calculate percentage change from previous close"""
+                try:
+                    symbol = symbols[symbol_key]
+                    if len(data[symbol]) >= 2:
+                        prev_close = data[symbol]['Close'].iloc[-2]
+                        current_close = data[symbol]['Close'].iloc[-1]
+                        pct_change = ((current_close - prev_close) / prev_close) * 100
+                        return pct_change
+                    else:
+                        # Fallback: use day's open vs close
+                        current_open = data[symbol]['Open'].iloc[-1]
+                        current_close = data[symbol]['Close'].iloc[-1]
+                        pct_change = ((current_close - current_open) / current_open) * 100
+                        return pct_change
+                except Exception as e:
+                    logger.warning(f"Could not calculate change for {symbol_key}: {e}")
+                    return 0.0
+            
+            def safe_get_price(symbol_key, default_value):
+                """Safely get current price"""
+                try:
+                    symbol = symbols[symbol_key]
+                    return float(data[symbol]['Close'].iloc[-1])
+                except Exception as e:
+                    logger.warning(f"Could not fetch price for {symbol_key}: {e}")
+                    return default_value
+            
+            # Calculate percentage changes (futures-like behavior)
+            sp500_change = safe_get_change('sp500')
+            nasdaq_change = safe_get_change('nasdaq')  
+            russell_change = safe_get_change('russell')
+            
+            # Get current prices
+            crude_oil_price = safe_get_price('crude_oil', 0.0)
+            vix_price = safe_get_price('vix', 0.0)
+            
+            # Treasury yield (^TNX gives yield in percent, no division needed)
             try:
-                sp500_url = f"{self.base_url}/quote/^GSPC?apikey={self.fmp_api_key}"
-                sp500_response = requests.get(sp500_url, timeout=10)
-                if sp500_response.status_code == 200:
-                    sp500_data = sp500_response.json()
-                    if sp500_data and len(sp500_data) > 0:
-                        sp500_change = sp500_data[0].get('changesPercentage', 0)
+                treasury_yield = safe_get_price('treasury_10y', 0.0)
             except Exception as e:
-                logger.warning(f"Could not fetch S&P 500 data: {e}")
+                logger.warning(f"Could not fetch Treasury yield: {e}")
+                treasury_yield = 0.0
             
-            try:
-                nasdaq_url = f"{self.base_url}/quote/^IXIC?apikey={self.fmp_api_key}"
-                nasdaq_response = requests.get(nasdaq_url, timeout=10)
-                if nasdaq_response.status_code == 200:
-                    nasdaq_data = nasdaq_response.json()
-                    if nasdaq_data and len(nasdaq_data) > 0:
-                        nasdaq_change = nasdaq_data[0].get('changesPercentage', 0)
-            except Exception as e:
-                logger.warning(f"Could not fetch NASDAQ data: {e}")
-            
-            try:
-                dow_url = f"{self.base_url}/quote/^DJI?apikey={self.fmp_api_key}"
-                dow_response = requests.get(dow_url, timeout=10)
-                if dow_response.status_code == 200:
-                    dow_data = dow_response.json()
-                    if dow_data and len(dow_data) > 0:
-                        russell_change = dow_data[0].get('changesPercentage', 0)  # Use Dow as Russell proxy
-            except Exception as e:
-                logger.warning(f"Could not fetch Dow Jones data: {e}")
-            
-            # Try to get commodity data (limited symbols available in free tier)
-            try:
-                # BZUSD, SIUSD, ESUSD are available in free tier
-                oil_url = f"{self.base_url}/quote/BZUSD?apikey={self.fmp_api_key}"  # Brent oil
-                oil_response = requests.get(oil_url, timeout=10)
-                if oil_response.status_code == 200:
-                    oil_data = oil_response.json()
-                    if oil_data and len(oil_data) > 0:
-                        crude_oil_price = oil_data[0].get('price', 75.0)  # Default to reasonable value
-            except Exception as e:
-                logger.warning(f"Could not fetch oil data: {e}")
-                crude_oil_price = 75.0  # Reasonable default
-            
-            # Try to get VIX (may not be available in free tier)
-            try:
-                vix_url = f"{self.base_url}/quote/^VIX?apikey={self.fmp_api_key}"
-                vix_response = requests.get(vix_url, timeout=10)
-                if vix_response.status_code == 200:
-                    vix_data = vix_response.json()
-                    if vix_data and len(vix_data) > 0:
-                        vix_price = vix_data[0].get('price', 15.0)
-            except Exception as e:
-                logger.warning(f"Could not fetch VIX data: {e}")
-                vix_price = 15.0  # Reasonable default
-            
-            # Treasury yield may not be available in free tier, use reasonable default
-            treasury_yield = 0.0
-            
-            # Determine market sentiment based on performance
+            # Calculate market sentiment (same logic as original)
             avg_change = (sp500_change + nasdaq_change + russell_change) / 3
             if avg_change > 1.0:
                 sentiment = "Bullish"
@@ -303,16 +445,17 @@ class EnhancedBriefingGenerator:
             
         except Exception as e:
             logger.error(f"Error fetching market futures data: {e}")
-            # Return reasonable defaults instead of failing
+            # Return zero defaults for debugging
             return MarketData(
-                sp500_futures=0.15,
-                nasdaq_futures=0.22,
-                russell_futures=0.08,
-                crude_oil=75.0,
-                treasury_yield=4.2,
-                vix=15.0,
-                sentiment="Neutral"
+                sp500_futures=0.0,
+                nasdaq_futures=0.0,
+                russell_futures=0.0,
+                crude_oil=0.0,
+                treasury_yield=0.0,
+                vix=0.0,
+                sentiment="ERROR - FUTURES DATA FAILED"
             )
+
     
     def fetch_economic_calendar(self) -> List[EconomicEvent]:
         """Fetch economic calendar from FMP API with free tier limitations"""
@@ -568,6 +711,16 @@ class EnhancedBriefingGenerator:
 
 ---
 
+## Current Market Data
+
+**Current Index Levels:**
+
+- **S&P 500:** {market_data.sp500_current:.2f}
+- **Nasdaq Composite:** {market_data.nasdaq_current:.2f}
+- **Russell 2000:** {market_data.russell_current:.2f}
+
+---
+
 ## Key Headlines
 
 """
@@ -701,38 +854,7 @@ This briefing is based on the following articles:
         logger.info(f"Briefing saved to: {filepath}")
         return str(filepath)
     
-    def _fetch_market_futures_yfinance(self) -> MarketData:
-        """Fetch market futures data using yfinance fallback"""
-        logger.info("🔄 Using Yahoo Finance fallback for market data")
-        
-        try:
-            fallback = YFinanceFallback()
-            snapshot = fallback.get_market_snapshot()
-            
-            logger.info(f"✅ Yahoo Finance fallback successful: {snapshot.sentiment} sentiment")
-            
-            return MarketData(
-                sp500_futures=snapshot.sp500_futures,
-                nasdaq_futures=snapshot.nasdaq_futures,
-                russell_futures=snapshot.russell_futures,
-                crude_oil=snapshot.crude_oil,
-                treasury_yield=snapshot.treasury_yield,
-                vix=snapshot.vix,
-                sentiment=snapshot.sentiment
-            )
-            
-        except Exception as e:
-            logger.error(f"Yahoo Finance fallback failed: {e}")
-            # Return reasonable defaults as last resort
-            return MarketData(
-                sp500_futures=0.10,
-                nasdaq_futures=0.15,
-                russell_futures=0.05,
-                crude_oil=72.0,
-                treasury_yield=4.2,
-                vix=16.0,
-                sentiment="Neutral"
-            )
+    # Legacy function removed - now using _fetch_futures_data and _fetch_current_market_data
 
 def main():
     """Test the enhanced briefing generator"""

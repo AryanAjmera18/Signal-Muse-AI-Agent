@@ -37,7 +37,6 @@ class OrchestrationConfig:
     enable_sentiment_analysis: bool = True
     enable_economic_calendar: bool = True
     enable_market_data: bool = True
-    enable_finbert_api: bool = True
     max_articles_per_source: int = 20
     briefing_format: str = "unbound_x"  # "unbound_x" or "detailed"
     save_intermediate_results: bool = True
@@ -48,7 +47,6 @@ class AgentOrchestrator:
     def __init__(self, config: OrchestrationConfig = None):
         self.config = config or OrchestrationConfig()
         self.results = {}
-        self.finbert_api_url = "http://localhost:8000" if self.config.enable_finbert_api else None
         
     async def run_full_analysis(self, ticker: str = None, category: str = None) -> Dict:
         """Run the complete multi-agent analysis pipeline"""
@@ -229,7 +227,10 @@ class AgentOrchestrator:
                         'crude_oil': market_data.crude_oil,
                         'treasury_yield': market_data.treasury_yield,
                         'vix': market_data.vix,
-                        'sentiment': market_data.sentiment
+                        'sentiment': market_data.sentiment,
+                        'sp500_current': market_data.sp500_current,
+                        'nasdaq_current': market_data.nasdaq_current,
+                        'russell_current': market_data.russell_current
                     }
                 },
                 timestamp=datetime.now().isoformat()
@@ -327,52 +328,9 @@ class AgentOrchestrator:
             )
     
     async def _add_sentiment_analysis(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Add sentiment analysis to the DataFrame"""
-        if not self.finbert_api_url:
-            logger.warning("FinBERT API not available, skipping sentiment analysis")
-            return df
-        
-        try:
-            # Prepare texts for batch analysis
-            texts = df['title'].tolist()
-            
-            # Handle optional columns with publisher/source mapping
-            if 'source' in df.columns:
-                sources = df['source'].tolist()
-            elif 'publisher' in df.columns:
-                sources = df['publisher'].tolist()
-            else:
-                sources = ['Unknown'] * len(texts)
-            
-            categories = df['category'].tolist() if 'category' in df.columns else ['general'] * len(texts)
-            
-            # Call FinBERT API
-            payload = {
-                'texts': texts,
-                'sources': sources,
-                'categories': categories
-            }
-            
-            response = requests.post(
-                f"{self.finbert_api_url}/classify/batch",
-                json=payload,
-                timeout=30
-            )
-            response.raise_for_status()
-            
-            results = response.json()['results']
-            
-            # Add sentiment data to DataFrame
-            df['sentiment'] = [r['sentiment'] for r in results]
-            df['sentiment_confidence'] = [r['confidence'] for r in results]
-            
-            logger.info(f"Added sentiment analysis to {len(df)} articles")
-            return df
-            
-        except Exception as e:
-            logger.error(f"Sentiment analysis error: {str(e)}")
-            # Return DataFrame without sentiment analysis
-            return df
+        """Add sentiment analysis to the DataFrame - FinBERT removed, returning original DataFrame"""
+        logger.info("Sentiment analysis disabled - FinBERT integration removed")
+        return df
     
     async def _generate_final_report(self) -> Dict:
         """Generate final comprehensive report"""
@@ -440,7 +398,6 @@ async def main():
         enable_sentiment_analysis=True,
         enable_economic_calendar=True,
         enable_market_data=True,
-        enable_finbert_api=False,  # Set to False for testing without FinBERT API
         max_articles_per_source=10,
         briefing_format="unbound_x",
         save_intermediate_results=True
