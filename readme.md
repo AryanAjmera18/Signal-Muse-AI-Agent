@@ -273,4 +273,4 @@ MIT License - see [LICENSE](LICENSE) file.
 
 ---
 
-**⚠️ Disclaimer**: Educational use only. Not financial advice. Consult qualified professionals for investment decisions.
+**⚠️ Disclaimer**: Educational use only.Not financial advice. Consult qualified professionals for investment decisions.
