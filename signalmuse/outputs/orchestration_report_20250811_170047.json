@@ -1,0 +1,275 @@
+{
+  "execution_summary": {
+    "total_agents": 4,
+    "successful_agents": 4,
+    "timestamp": "2025-08-11T17:00:47.893428"
+  },
+  "agent_results": {
+    "agent1": {
+      "success": true,
+      "data": {
+        "articles_count": 100,
+        "sources_count": 10,
+        "categories": {
+          "general_financial": 30,
+          "investing_markets": 30,
+          "cryptocurrency": 20,
+          "economy_policy": 10,
+          "fintech": 10
+        },
+        "filepath": "signalmuse\\data\\real\\agent1_news_20250811_165759.csv",
+        "sample_articles": [
+          {
+            "title": "Trump tried slowing China\u2019s AI development. He may have hurt Nvidia instead.",
+            "link": "https://www.marketwatch.com/story/trump-tried-slowing-chinas-ai-development-he-may-have-hurt-nvidia-instead-8264c2bc?mod=mw_rss_topstories",
+            "summary": "Nvidia finds itself caught between its competition and the Trump administration.",
+            "published": "2025-08-11 20:53:00",
+            "source": "MarketWatch Top Stories",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "WP-MKTW-0004351658",
+            "author": "Jurica Dujmovic",
+            "tags": [],
+            "id": "521d3ce66984a4fe052519a5dfee0ae0"
+          },
+          {
+            "title": "Trump says gold will not be tariffed",
+            "link": "https://www.cnbc.com/2025/08/11/trump-gold-tariffs-futures.html",
+            "summary": "A ruling by U.S. Customs and Border Protection that gold bars from Switzerland were subject to tariffs surprised the market.",
+            "published": "2025-08-11 20:52:50",
+            "source": "CNBC World News",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "108184325",
+            "author": "",
+            "tags": [],
+            "id": "6a09acf4bdee7ca62a3d16882bd00bc2"
+          },
+          {
+            "title": "Newly engaged Cristiano Ronaldo\u2019s $700 million contract: How its perks compare with what other top athletes and CEOs get",
+            "link": "https://www.marketwatch.com/story/cristiano-ronaldos-new-700-million-contract-reportedly-includes-private-jet-credits-and-personal-staff-heres-how-that-compares-with-perks-for-other-top-athletes-and-ceos-a76253ab?mod=mw_rss_topstories",
+            "summary": "Portuguese star\u2019s deal with Saudi club Al Nassr is set to be the most lucrative sports contract ever in average annual value",
+            "published": "2025-08-11 20:46:00",
+            "source": "MarketWatch Top Stories",
+            "category": "general_financial",
+            "priority": 1,
+            "guid": "WP-MKTW-0004295922",
+            "author": "Weston Blasi",
+            "tags": [],
+            "id": "4e5d07b68301af2d0b5b5a4f34d4625b"
+          },
+          {
+            "title": "Amazon has 'beautiful' and 'romantic' solar patio lights for only $27 right now",
+            "link": "https://www.thestreet.com/deals/cooo-6-pack-crackle-glass-solar-lanterns-amazon-sale",
+            "summary": "\"These solar lanterns gave my backyard a warm, inviting glow that feels effortlessly magical.\"",
+            "published": "2025-08-11 20:45:00",
+            "source": "TheStreet",
+            "category": "investing_markets",
+            "priority": 1,
+            "guid": "https://www.thestreet.com/deals/cooo-6-pack-crackle-glass-solar-lanterns-amazon-sale",
+            "author": "Ashley Jones",
+            "tags": [
+              {
+                "term": "Savings",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Patio & Garden",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Household Products",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Amazon",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Outdoors",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Deals",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Deals & Bargains News",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Home",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Commerce Deal",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Commerce",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Shopping",
+                "scheme": null,
+                "label": null
+              }
+            ],
+            "id": "45fd7e46efd3b81cedc08e1453ae8c19"
+          },
+          {
+            "title": "Birkin bag maker raises red flag about a disruptive customer trend",
+            "link": "https://www.thestreet.com/retail/birkin-bag-maker-raises-red-flag-about-a-disruptive-customer-trend",
+            "summary": "The CEO of Herm\u00e8s is sounding the alarm on the impact of \"false customers.\"",
+            "published": "2025-08-11 20:37:00",
+            "source": "TheStreet",
+            "category": "investing_markets",
+            "priority": 1,
+            "guid": "https://www.thestreet.com/retail/birkin-bag-maker-raises-red-flag-about-a-disruptive-customer-trend",
+            "author": "Patricia Battle",
+            "tags": [
+              {
+                "term": "Luxury",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "CEO",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Shopping",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Retail",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Sales",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Fashion",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Price",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Investing News, Analysis, and Tips",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Retail, Shopping Malls, Chain Stores News & Analysis",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Company Earnings News, Reports, and Whispers",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Stock Investing News, Analysis and Tips",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Luxury Goods",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Consumer",
+                "scheme": null,
+                "label": null
+              },
+              {
+                "term": "Earnings",
+                "scheme": null,
+                "label": null
+              }
+            ],
+            "id": "621270d2432526615167006deac5afc6"
+          }
+        ]
+      },
+      "timestamp": "2025-08-11T16:57:59.491630",
+      "error": null
+    },
+    "agent2": {
+      "success": true,
+      "data": {
+        "message": "Calendar functionality disabled - will be replaced by external calendar module",
+        "economic_events": [],
+        "earnings_events": [],
+        "economic_count": 0,
+        "earnings_count": 0
+      },
+      "timestamp": "2025-08-11T16:57:59.493628",
+      "error": null
+    },
+    "agent3": {
+      "success": true,
+      "data": {
+        "market_data": {
+          "sp500_futures": NaN,
+          "nasdaq_futures": NaN,
+          "russell_futures": NaN,
+          "crude_oil": 64.01000213623047,
+          "treasury_yield": 4.2729997634887695,
+          "vix": 16.25,
+          "sentiment": "Bearish",
+          "sp500_current": 6373.4501953125,
+          "nasdaq_current": 21385.404296875,
+          "russell_current": 2216.511474609375
+        },
+        "futures_summary": {
+          "sp500_change": NaN,
+          "nasdaq_change": NaN,
+          "russell_change": NaN,
+          "crude_oil": 64.01000213623047,
+          "treasury_yield": 4.2729997634887695,
+          "vix": 16.25,
+          "sentiment": "Bearish",
+          "sp500_current": 6373.4501953125,
+          "nasdaq_current": 21385.404296875,
+          "russell_current": 2216.511474609375
+        }
+      },
+      "timestamp": "2025-08-11T16:58:08.042852",
+      "error": null
+    },
+    "agent4": {
+      "success": true,
+      "data": {
+        "briefing_filepath": "signalmuse\\outputs\\Current_Brief_20250811_170047.md",
+        "briefing_length": 6748,
+        "format": "individual_ai_investor_briefing",
+        "articles_processed": 7,
+        "individual_ai_calls": 7
+      },
+      "timestamp": "2025-08-11T17:00:47.893428",
+      "error": null
+    }
+  }
+}
