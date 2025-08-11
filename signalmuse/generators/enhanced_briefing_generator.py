@@ -3,7 +3,7 @@
 Enhanced Morning Briefing Generator
 
 Generates comprehensive morning market briefings in the UnBound X format
-with futures data, economic calendar, earnings, and strategic insights.
+with futures data and strategic insights.
 """
 
 import pandas as pd
@@ -63,24 +63,6 @@ class MarketData:
     sp500_current: float = 0.0
     nasdaq_current: float = 0.0
     russell_current: float = 0.0
-
-@dataclass
-class EconomicEvent:
-    """Economic calendar event"""
-    time: str
-    event: str
-    consensus: str
-    previous: str
-    impact: str
-
-@dataclass
-class EarningsEvent:
-    """Earnings calendar event"""
-    company: str
-    ticker: str
-    time: str
-    eps_estimate: str
-    revenue_estimate: str
 
 class EnhancedBriefingGenerator:
     """Enhanced morning briefing generator with UnBound X format"""
@@ -228,8 +210,6 @@ class EnhancedBriefingGenerator:
                 russell_current=0.0
             )
 
-
-
     def _fetch_current_market_data(self) -> MarketData:
         """Fetch market futures data from Yahoo Finance using yfinance"""
 
@@ -262,26 +242,6 @@ class EnhancedBriefingGenerator:
                 auto_adjust=True,
                 progress=False
             )
-            
-            # def safe_get_change(symbol_key):
-            #     """Safely calculate percentage change from previous close"""
-            #     try:
-            #         symbol = symbols[symbol_key]
-            #         if len(data[symbol]) >= 2:
-            #             prev_close = data[symbol]['Close'].iloc[-2]
-            #             current_close = data[symbol]['Close'].iloc[-1]
-            #             pct_change = ((current_close - prev_close) / prev_close) * 100
-            #             return pct_change
-            #         else:
-            #             # Fallback: use day's open vs close
-            #             current_open = data[symbol]['Open'].iloc[-1]
-            #             current_close = data[symbol]['Close'].iloc[-1]
-            #             pct_change = ((current_close - current_open) / current_open) * 100
-            #             return pct_change
-            #     except Exception as e:
-            #         logger.warning(f"Could not calculate change for {symbol_key}: {e}")
-            #         return 0.0
-            
             def safe_get_price(symbol_key, default_value):
                 """Safely get current price"""
                 try:
@@ -306,19 +266,6 @@ class EnhancedBriefingGenerator:
             except Exception as e:
                 logger.warning(f"Could not fetch Treasury yield: {e}")
                 treasury_yield = 0.0
-            
-            # # Calculate market sentiment (same logic as original)
-            # avg_change = (sp500_change + nasdaq_change + russell_change) / 3
-            # if avg_change > 1.0:
-            #     sentiment = "Bullish"
-            # elif avg_change > 0.3:
-            #     sentiment = "Cautiously Optimistic" 
-            # elif avg_change > -0.3:
-            #     sentiment = "Neutral"
-            # elif avg_change > -1.0:
-            #     sentiment = "Cautiously Pessimistic"
-            # else:
-            #     sentiment = "Bearish"
             
             return MarketData(
                 sp500_futures=sp500_current,
@@ -455,98 +402,6 @@ class EnhancedBriefingGenerator:
                 vix=0.0,
                 sentiment="ERROR - FUTURES DATA FAILED"
             )
-
-    
-    def fetch_economic_calendar(self) -> List[EconomicEvent]:
-        """Fetch economic calendar from FMP API with free tier limitations"""
-        if not self.fmp_api_key:
-            logger.error("FMP API key not found in environment variables")
-            return []  # Return empty list instead of raising error
-        
-        try:
-            # Get today's date and next few days for economic events
-            from datetime import datetime, timedelta
-            today = datetime.now().strftime("%Y-%m-%d")
-            future_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-            
-            url = f"{self.base_url}/economic_calendar?from={today}&to={future_date}&apikey={self.fmp_api_key}"
-            response = requests.get(url, timeout=10)
-            
-            if response.status_code == 403:
-                logger.warning("Economic calendar not available in free tier")
-                return []
-            
-            response.raise_for_status()
-            data = response.json()
-            events = []
-            
-            for item in data[:5]:  # Top 5 events
-                events.append(EconomicEvent(
-                    time=item.get('time', ''),
-                    event=item.get('event', ''),
-                    consensus=item.get('estimate', item.get('consensus', '')),
-                    previous=item.get('previous', ''),
-                    impact=item.get('impact', 'Medium')
-                ))
-            
-            return events
-            
-        except Exception as e:
-            logger.warning(f"Error fetching economic calendar (may not be available in free tier): {e}")
-            return []  # Return empty list instead of raising error
-    
-    def fetch_earnings_calendar(self) -> List[EarningsEvent]:
-        """Fetch earnings calendar from FMP API with free tier limitations"""
-        if not self.fmp_api_key:
-            logger.error("FMP API key not found in environment variables")
-            return []  # Return empty list instead of raising error
-        
-        try:
-            # Get today's date and next few days for earnings events
-            from datetime import datetime, timedelta
-            today = datetime.now().strftime("%Y-%m-%d")
-            future_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-            
-            url = f"{self.base_url}/earning_calendar?from={today}&to={future_date}&apikey={self.fmp_api_key}"
-            response = requests.get(url, timeout=10)
-            
-            if response.status_code == 403:
-                logger.warning("Earnings calendar not available in free tier")
-                return []
-            
-            response.raise_for_status()
-            data = response.json()
-            events = []
-            
-            for item in data[:5]:  # Top 5 earnings
-                # Format EPS and revenue estimates
-                eps_estimate = item.get('epsEstimate', item.get('eps', ''))
-                if eps_estimate and isinstance(eps_estimate, (int, float)):
-                    eps_estimate = f"${eps_estimate:.2f}"
-                
-                revenue_estimate = item.get('revenueEstimate', item.get('revenue', ''))
-                if revenue_estimate and isinstance(revenue_estimate, (int, float)):
-                    # Convert to billions/millions format
-                    if revenue_estimate >= 1e9:
-                        revenue_estimate = f"${revenue_estimate/1e9:.1f}B"
-                    elif revenue_estimate >= 1e6:
-                        revenue_estimate = f"${revenue_estimate/1e6:.1f}M"
-                    else:
-                        revenue_estimate = f"${revenue_estimate:.0f}"
-                
-                events.append(EarningsEvent(
-                    company=item.get('companyName', ''),
-                    ticker=item.get('symbol', ''),
-                    time=item.get('time', ''),
-                    eps_estimate=str(eps_estimate) if eps_estimate else '',
-                    revenue_estimate=str(revenue_estimate) if revenue_estimate else ''
-                ))
-            
-            return events
-            
-        except Exception as e:
-            logger.warning(f"Error fetching earnings calendar (may not be available in free tier): {e}")
-            return []  # Return empty list instead of raising error
     
     def analyze_news_sentiment(self, news_df: pd.DataFrame) -> Tuple[List[Dict], str]:
         """Analyze news sentiment and extract key headlines"""
@@ -659,8 +514,6 @@ class EnhancedBriefingGenerator:
             
             # Fetch market data
             market_data = self.fetch_market_futures()
-            economic_events = self.fetch_economic_calendar()
-            earnings_events = self.fetch_earnings_calendar()
             
             # Analyze news
             key_headlines, market_context = self.analyze_news_sentiment(news_df)
@@ -669,8 +522,6 @@ class EnhancedBriefingGenerator:
             briefing = self._format_briefing(
                 market_data=market_data,
                 key_headlines=key_headlines,
-                economic_events=economic_events,
-                earnings_events=earnings_events,
                 market_context=market_context,
                 ticker=ticker
             )
@@ -682,7 +533,6 @@ class EnhancedBriefingGenerator:
             return f"Error generating briefing: {str(e)}"
     
     def _format_briefing(self, market_data: MarketData, key_headlines: List[Dict], 
-                        economic_events: List[EconomicEvent], earnings_events: List[EarningsEvent],
                         market_context: str, ticker: str = None) -> str:
         """Format the briefing in UnBound X style with proper markdown"""
         
@@ -745,25 +595,7 @@ class EnhancedBriefingGenerator:
 ---
 """
         
-        # Add economic calendar
-        briefing += f"""## Today's Economic Calendar
-
-| Time (EST) | Event | Consensus | Previous | Impact |
-|------------|-------|-----------|----------|--------|
-"""
-        for event in economic_events:
-            briefing += f"| {event.time} | {event.event} | {event.consensus} | {event.previous} | {event.impact} |\n"
-        
-        # Add earnings calendar
-        briefing += f"""
-
-## Earnings Calendar - Key Reports
-
-| Company | Ticker | Time | EPS Estimate | Revenue Estimate |
-|---------|--------|------|--------------|------------------|
-"""
-        for event in earnings_events:
-            briefing += f"| {event.company} | {event.ticker} | {event.time} | {event.eps_estimate} | {event.revenue_estimate} |\n"
+        # Calendar sections will be added by external calendar module when integrated
         
         # Add strategic insights
         briefing += f"""
@@ -883,4 +715,4 @@ def main():
         print("Please run the news scraper first to generate sample data.")
 
 if __name__ == "__main__":
-    main() 
+    main()

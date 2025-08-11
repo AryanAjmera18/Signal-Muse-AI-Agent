@@ -167,40 +167,21 @@ class AgentOrchestrator:
             )
     
     async def _run_agent2(self) -> AgentResult:
-        """Agent 2: Economic Calendar & Events"""
-        logger.info("📅 Agent 2: Fetching economic calendar and events")
+        """Agent 2: Calendar & Events (Disabled - will be replaced by external calendar module)"""
+        logger.info("📅 Agent 2: Calendar functionality disabled - will be replaced by external module")
         
-        try:
-            # Import the enhanced briefing generator for economic data
-            from signalmuse.generators.enhanced_briefing_generator import EnhancedBriefingGenerator
-            
-            generator = EnhancedBriefingGenerator()
-            
-            # Fetch economic calendar
-            economic_events = generator.fetch_economic_calendar()
-            earnings_events = generator.fetch_earnings_calendar()
-            
-            return AgentResult(
-                agent_name="Agent2_EconomicCalendar",
-                success=True,
-                data={
-                    'economic_events': [asdict(event) for event in economic_events],
-                    'earnings_events': [asdict(event) for event in earnings_events],
-                    'economic_count': len(economic_events),
-                    'earnings_count': len(earnings_events)
-                },
-                timestamp=datetime.now().isoformat()
-            )
-            
-        except Exception as e:
-            logger.error(f"Agent 2 error: {str(e)}")
-            return AgentResult(
-                agent_name="Agent2_EconomicCalendar",
-                success=False,
-                data={},
-                timestamp=datetime.now().isoformat(),
-                error=str(e)
-            )
+        return AgentResult(
+            agent_name="Agent2_EconomicCalendar",
+            success=True,
+            data={
+                'message': 'Calendar functionality disabled - will be replaced by external calendar module',
+                'economic_events': [],
+                'earnings_events': [],
+                'economic_count': 0,
+                'earnings_count': 0
+            },
+            timestamp=datetime.now().isoformat()
+        )
     
     async def _run_agent3(self) -> AgentResult:
         """Agent 3: Market Data & Futures"""

@@ -32,7 +32,7 @@ async def run_analysis():
         # Create configuration
         config = OrchestrationConfig(
             enable_sentiment_analysis=True,
-            enable_economic_calendar=True,
+            enable_economic_calendar=False,  # Disabled - will be replaced by external calendar module
             enable_market_data=True,
             max_articles_per_source=10,
             briefing_format="unbound_x",

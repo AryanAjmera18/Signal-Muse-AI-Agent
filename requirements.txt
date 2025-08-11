@@ -11,3 +11,4 @@ instructor
 feedparser
 asyncio
 aiohttp
+finnhub-python
