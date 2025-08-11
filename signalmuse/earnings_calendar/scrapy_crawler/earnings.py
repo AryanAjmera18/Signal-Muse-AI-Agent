@@ -1,5 +1,17 @@
 import scrapy
 from datetime import datetime
+import os
+
+# Get the absolute path to the data directory
+def get_output_path():
+    # Get the directory where this script is located
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # Navigate to the project root and then to data/real
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
+    output_dir = os.path.join(project_root, 'signalmuse', 'data', 'real')
+    # Create directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    return os.path.join(output_dir, 'earnings_data.json')
 
 class EarningsSpider(scrapy.Spider):
     name = 'earnings'
@@ -27,7 +39,7 @@ class EarningsSpider(scrapy.Spider):
             'Cache-Control': 'max-age=0',
         },
         'FEEDS': {
-            'earnings_data.json': {
+            get_output_path(): {
                 'format': 'json',
                 'overwrite': True,
             }
