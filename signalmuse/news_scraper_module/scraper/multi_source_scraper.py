@@ -69,9 +69,13 @@ class MultiSourceScraper:
             return []
     
     def _generate_article_id(self, article: Dict) -> str:
-        """Generate unique ID for article"""
+        """Generate unique 5-digit ID for article"""
         content = f"{article['title']}{article['link']}{article['published']}"
-        return hashlib.md5(content.encode()).hexdigest()
+        # Generate hash and convert to integer, then take modulo to get 5 digits
+        hash_value = int(hashlib.md5(content.encode()).hexdigest(), 16)
+        # Use modulo 100000 to get 5 digits (00000-99999)
+        five_digit_id = str(hash_value % 100000).zfill(5)
+        return five_digit_id
     
     def fetch_all_feeds(self, max_articles_per_feed: int = 50) -> pd.DataFrame:
         """Fetch all enabled feeds and return combined DataFrame"""
