@@ -93,8 +93,8 @@ class AgentOrchestrator:
         logger.info("📰 Agent 1: Collecting news and performing sentiment analysis")
         
         try:
-            # Import the multi-source scraper
-            from signalmuse.scrapers.multi_source_scraper import MultiSourceScraper
+            # Import the multi-source scraper from new module
+            from signalmuse.news_scraper_module import MultiSourceScraper
             
             scraper = MultiSourceScraper()
             

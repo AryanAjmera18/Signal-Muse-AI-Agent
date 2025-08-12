@@ -97,7 +97,7 @@ class EarningsSpider(scrapy.Spider):
                     
                     earnings_item = {
                         'company_name': company_name,
-                        'ticker_symbol': ticker,
+                        'ticker': ticker,
                         'source': 'marketwatch',
                         'scraped_at': datetime.now().isoformat(),
                         'source_url': response.url
@@ -107,9 +107,9 @@ class EarningsSpider(scrapy.Spider):
                     if len(data_cells) > 0:
                         earnings_item['earnings_date'] = self._extract_text(data_cells[0].css('div.cell__content::text'))
                     if len(data_cells) > 1:
-                        earnings_item['estimated_eps'] = self._extract_text(data_cells[1].css('div.cell__content::text'))
+                        earnings_item['eps_forecast'] = self._extract_text(data_cells[1].css('div.cell__content::text'))
                     if len(data_cells) > 2:
-                        earnings_item['prior_eps'] = self._extract_text(data_cells[2].css('div.cell__content::text'))
+                        earnings_item['eps_actual'] = self._extract_text(data_cells[2].css('div.cell__content::text'))
                     
                     # Extract surprise data
                     surprise_cells = row.css('td.overflow__cell.negative, td.overflow__cell.positive') or data_cells[-1:] if data_cells else []
