@@ -63,14 +63,10 @@ class IndividualArticleProcessor:
 
     def _setup_groq_client(self):
         """Initialize Groq client for article analysis"""
-        if not self.groq_api_key:
-            logger.warning("Groq API key not found")
-            return None
-        try:
-            return instructor.from_groq(Groq(api_key=self.groq_api_key))
-        except Exception as e:
-            logger.error(f"Failed to initialize Groq client: {e}")
-            return None
+        # Use centralized Groq client from news_csv_updater_module
+        from signalmuse.news_csv_updater_module.groq_client import GroqClientManager
+        groq_manager = GroqClientManager()
+        return groq_manager.get_client() if groq_manager.is_available() else None
 
     async def process_article(self, article: Dict) -> ProcessedArticle:
         """Process individual article with AI analysis"""

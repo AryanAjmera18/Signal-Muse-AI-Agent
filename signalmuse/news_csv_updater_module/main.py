@@ -142,7 +142,7 @@ class NewsCSVUpdater:
         logger.info(f"Processing completion: {stats['processing_completion']:.1f}%")
         logger.info(f"Earning Release articles (label 0): {stats['earning_release_count']}")
         logger.info(f"High Impact articles (label 1): {stats['high_impact_count']}")
-        logger.info(f"Articles with tickers: {stats['articles_with_ticker']}")
+        logger.info(f"Articles with valid tickers (excluding N/A): {stats['articles_with_ticker']}")
         logger.info("=" * 50)
 
 def main():

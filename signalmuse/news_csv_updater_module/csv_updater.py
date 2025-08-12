@@ -193,7 +193,7 @@ class CSVUpdater:
         stats = {
             'total_articles': len(df),
             'articles_with_label': len(df[df['label'].notna()]),
-            'articles_with_ticker': len(df[df['ticker'].notna()]),
+            'articles_with_ticker': len(df[(df['ticker'].notna()) & (df['ticker'] != 'N/A')]),
             'earning_release_count': len(df[df['label'] == 0]),
             'high_impact_count': len(df[df['label'] == 1]),
             'processing_completion': len(df[df['label'].notna()]) / len(df) * 100

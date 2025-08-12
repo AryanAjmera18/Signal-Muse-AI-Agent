@@ -31,12 +31,12 @@ class NewsReport(BaseModel):
 
 def setup_groq_client():
     """Initialize Groq client with API key from environment"""
-    if not config.has_groq_api:
+    # Use centralized Groq client from news_csv_updater_module
+    from signalmuse.news_csv_updater_module.groq_client import GroqClientManager
+    groq_manager = GroqClientManager()
+    if not groq_manager.is_available():
         raise ValueError("GROQ_API_KEY environment variable not found. Please set it in your .env file")
-    
-    # Initialize Groq client with instructor for structured outputs
-    client = instructor.from_provider("groq/llama3-8b-8192")
-    return client
+    return groq_manager.get_client()
 
 def generate_report_for_news_item(client, news_item: Dict) -> str:
     """Generate a human-like report for a single news item using Groq API"""

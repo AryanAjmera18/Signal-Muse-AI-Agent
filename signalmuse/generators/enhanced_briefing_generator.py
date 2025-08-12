@@ -75,76 +75,47 @@ class EnhancedBriefingGenerator:
         
     def _setup_groq_client(self):
         """Initialize Groq client for intelligent ticker extraction"""
-        if not self.groq_api_key:
-            return None
-        try:
-            return instructor.from_groq(Groq(api_key=self.groq_api_key))
-        except Exception as e:
-            logger.warning(f"Failed to initialize Groq client: {e}")
-            return None
+        # Use centralized Groq client from news_csv_updater_module
+        from signalmuse.news_csv_updater_module.groq_client import GroqClientManager
+        groq_manager = GroqClientManager()
+        return groq_manager.get_client() if groq_manager.is_available() else None
         
     def _extract_ticker_from_headline(self, title: str, summary: str = "") -> Tuple[str, str]:
-        """Extract company ticker and name from headline using intelligent GROQ API"""
+        """Extract company ticker and name from headline using centralized ticker extraction"""
         
-        # Try GROQ API first for intelligent extraction
-        if self.groq_client:
-            try:
-                return self._extract_ticker_with_groq(title, summary)
-            except Exception as e:
-                logger.warning(f"GROQ ticker extraction failed: {e}, falling back to regex")
-        
-        # Fallback to simple regex-based extraction if GROQ fails
-        return self._extract_ticker_fallback(title, summary)
-    
-    def _extract_ticker_with_groq(self, title: str, summary: str = "") -> Tuple[str, str]:
-        """Use GROQ API for intelligent ticker extraction"""
-        
-        # Create ticker list for the prompt
-        ticker_list = ", ".join([f"{ticker} ({name})" for ticker, name in list(COMMON_TICKERS.items())[:20]])  # Limit for prompt size
-        
-        prompt = f"""
-        Analyze this financial news headline and summary to extract the primary company ticker and name.
-        
-        Headline: {title}
-        Summary: {summary[:200]}...
-        
-        Available tickers: {ticker_list}
-        
-        Rules:
-        1. Return the ticker symbol and full company name of the PRIMARY company mentioned
-        2. If multiple companies are mentioned, choose the one that is the main subject
-        3. If no known company is found, return ticker="N/A" and company_name="N/A"
-        4. Confidence should be 0.0-1.0 based on how certain you are
-        5. Be conservative - only return high confidence matches
-        
-        Focus on explicit mentions of company names, stock symbols, or earnings reports.
-        """
-        
+        # Use centralized ticker extraction from news_csv_updater_module
         try:
-            extraction = self.groq_client.chat.completions.create(
-                model="llama3-8b-8192",
-                messages=[
-                    {"role": "system", "content": "You are an expert financial analyst who extracts company tickers from news headlines with high accuracy."},
-                    {"role": "user", "content": prompt}
-                ],
-                response_model=TickerExtraction,
-                max_tokens=100,
-                temperature=0.1
-            )
+            from signalmuse.news_csv_updater_module.chunk_processor import ChunkProcessor
+            from signalmuse.news_csv_updater_module.groq_client import GroqClientManager
             
-            # Validate the extracted ticker is in our known list
-            if extraction.ticker in COMMON_TICKERS and extraction.confidence > 0.6:
-                return extraction.ticker, COMMON_TICKERS[extraction.ticker]
-            elif extraction.ticker == "N/A":
+            groq_manager = GroqClientManager()
+            if not groq_manager.is_available():
                 return "N/A", "N/A"
+            
+            chunk_processor = ChunkProcessor(groq_manager)
+            
+            # Create a single article for processing
+            article = {
+                'id': 1,
+                'title': title,
+                'summary': summary
+            }
+            
+            # Process through LLM for ticker extraction
+            results = chunk_processor.process_chunk_with_llm([article])
+            
+            if results and len(results) > 0:
+                result = results[0]
+                ticker = result.get('ticker', 'N/A')
+                # Map ticker to company name using COMMON_TICKERS
+                company_name = COMMON_TICKERS.get(ticker, ticker) if ticker != 'N/A' else 'N/A'
+                return ticker, company_name
             else:
-                # If GROQ returns unknown ticker, fall back
-                logger.warning(f"GROQ returned unknown ticker {extraction.ticker}, using fallback")
-                return self._extract_ticker_fallback(title, summary)
+                return "N/A", "N/A"
                 
         except Exception as e:
-            logger.error(f"GROQ API error in ticker extraction: {e}")
-            raise e
+            logger.warning(f"Centralized ticker extraction failed: {e}, using fallback")
+            return self._extract_ticker_fallback(title, summary)
     
     def _extract_ticker_fallback(self, title: str, summary: str = "") -> Tuple[str, str]:
         """Simple regex-based fallback ticker extraction"""
