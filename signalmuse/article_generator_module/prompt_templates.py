@@ -22,7 +22,7 @@ Write a comprehensive earnings report in markdown format following this EXACT st
 
 <report_structure>
 
-### Company Name ({ticker})
+### Company Name ({ticker}) --> only ticker if company name is not available
 
 **Earnings Date:** [Date] | **EPS Forecast:** [Value] | **EPS Actual:** [Value] | **Surprise:** [Value]
 
@@ -67,7 +67,7 @@ Related News: {news}
 Write a comprehensive market impact report in markdown format following this EXACT structure - NO DEVIATION FROM THE STRUCTURE AS THIS IS GIVEN MY THE HEAD OF MANAGEMENT:
 
 <report_structure>
-### Company Name ({ticker})
+### Company Name ({ticker}) --> only ticker if company name is not available
 
 **Latest Developments:** [Date/Time of most recent news]
 

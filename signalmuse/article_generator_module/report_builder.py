@@ -76,7 +76,6 @@ def append_footer(report_path: str):
         report_path: Path to the report file
     """
     footer = """
-************************
 
 ## Compliance Disclosure
 
