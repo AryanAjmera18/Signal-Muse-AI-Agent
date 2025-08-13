@@ -14,7 +14,7 @@ Features:
 
 from .main import ArticleGenerator, main
 from .data_loader import load_ticker_data
-from .report_builder import create_report, append_to_report, append_footer
+from .report_builder import create_report, append_to_report, append_footer, insert_live_prices_section
 from .prompt_templates import EARNINGS_PROMPT, IMPACT_PROMPT
 
 __all__ = [
@@ -24,6 +24,7 @@ __all__ = [
     'create_report',
     'append_to_report',
     'append_footer',
+    'insert_live_prices_section',
     'EARNINGS_PROMPT',
     'IMPACT_PROMPT'
 ]

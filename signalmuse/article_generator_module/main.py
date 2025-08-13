@@ -27,12 +27,12 @@ from signalmuse.news_csv_updater_module.groq_client import GroqClientManager
 try:
     # Try relative imports first (for module import)
     from .data_loader import load_ticker_data
-    from .report_builder import create_report, append_to_report, append_footer
+    from .report_builder import create_report, append_to_report, append_footer, extract_and_format_news_sources
     from .prompt_templates import EARNINGS_PROMPT, IMPACT_PROMPT
 except ImportError:
     # Fallback to absolute imports (for script execution)
     from signalmuse.article_generator_module.data_loader import load_ticker_data
-    from signalmuse.article_generator_module.report_builder import create_report, append_to_report, append_footer
+    from signalmuse.article_generator_module.report_builder import create_report, append_to_report, append_footer, extract_and_format_news_sources
     from signalmuse.article_generator_module.prompt_templates import EARNINGS_PROMPT, IMPACT_PROMPT
 
 logger = get_logger(__name__)
@@ -97,21 +97,35 @@ class ArticleGenerator:
         return report_path
     
     def _generate_earnings_content(self, ticker: str, earnings_data: dict, news_data: dict) -> str:
-        """Generate content for 1 earnings ticker"""
+        """Generate content for 1 earnings ticker with news sources appended"""
         ticker_data = {
             'ticker': ticker,
             'earnings': earnings_data.get(ticker, {}),
             'news': news_data.get(ticker, [])
         }
-        return self._call_groq(EARNINGS_PROMPT.format(**ticker_data))
+        
+        # Generate LLM content (EXISTING CODE UNCHANGED)
+        llm_content = self._call_groq(EARNINGS_PROMPT.format(**ticker_data))
+        
+        # NEW: Extract and format news sources for this ticker
+        sources_content = extract_and_format_news_sources(ticker)
+        
+        return llm_content + sources_content
     
     def _generate_impact_content(self, ticker: str, news_data: dict) -> str:
-        """Generate content for 1 impact ticker"""
+        """Generate content for 1 impact ticker with news sources appended"""
         ticker_data = {
             'ticker': ticker, 
             'news': news_data.get(ticker, [])
         }
-        return self._call_groq(IMPACT_PROMPT.format(**ticker_data))
+        
+        # Generate LLM content (EXISTING CODE UNCHANGED)
+        llm_content = self._call_groq(IMPACT_PROMPT.format(**ticker_data))
+        
+        # NEW: Extract and format news sources for this ticker
+        sources_content = extract_and_format_news_sources(ticker)
+        
+        return llm_content + sources_content
     
     def _call_groq(self, prompt: str) -> str:
         """Single Groq call function with error handling"""

@@ -8,7 +8,9 @@ progressive content building with memory efficiency and progress saving.
 
 from datetime import datetime
 from pathlib import Path
+from typing import List, Dict
 from signalmuse.utils.utils import config, generate_timestamp_filename
+from signalmuse.ticker_list_gen_module.data_loader import load_updated_news_csv
 
 # Track which sections have been added to prevent duplicates
 _sections_added = set()
@@ -66,6 +68,87 @@ def append_to_report(report_path: str, content: str, section_type: str):
         # Append content with proper spacing
         f.write(content + "\n\n")
         f.write("---\n\n")  # Section separator
+
+
+def extract_and_format_news_sources(ticker: str) -> str:
+    """
+    For a given ticker:
+    1. Load updated_news.csv
+    2. Filter all news with that ticker
+    3. Extract ONLY source and link
+    4. Format as simple markdown links
+    
+    Args:
+        ticker: Stock ticker symbol
+        
+    Returns:
+        str: Formatted news sources section or empty string if no sources
+    """
+    try:
+        # Load CSV directly
+        news_df = load_updated_news_csv()
+        
+        # Filter news for this specific ticker
+        ticker_news = news_df[news_df['ticker'] == ticker]
+        
+        if ticker_news.empty:
+            return ""
+        
+        # Extract unique source-link pairs
+        sources_links = set()
+        for _, row in ticker_news.iterrows():
+            source = row.get('source', 'Unknown')
+            link = row.get('link', '')
+            if source and link:
+                sources_links.add((source, link))
+        
+        # Format as simple markdown links
+        sources_content = f"\n\n**News Sources for {ticker}:**\n"
+        
+        for source, link in sorted(sources_links):
+            sources_content += f"- [{source}]({link})\n"
+        
+        return sources_content
+        
+    except Exception as e:
+        # Return empty string if any error occurs
+        return ""
+
+
+def insert_live_prices_section(report_path: str, live_prices_content: str):
+    """
+    Insert live prices section at the beginning of the report (after header)
+    
+    Args:
+        report_path: Path to the report file
+        live_prices_content: Live prices markdown content to insert
+    """
+    try:
+        # Read existing content
+        with open(report_path, 'r', encoding='utf-8') as f:
+            existing_content = f.read()
+        
+        # Split at the first "---" to insert live prices after header
+        parts = existing_content.split("---", 1)
+        if len(parts) == 2:
+            header = parts[0]
+            rest = parts[1]
+            
+            # Write back with live prices inserted
+            with open(report_path, 'w', encoding='utf-8') as f:
+                f.write(header)
+                f.write(live_prices_content)  # Live prices section
+                f.write("---")
+                f.write(rest)
+        else:
+            # Fallback: append to end if structure is unexpected
+            with open(report_path, 'a', encoding='utf-8') as f:
+                f.write(live_prices_content)
+                
+    except Exception as e:
+        # If insertion fails, append to end as fallback
+        with open(report_path, 'a', encoding='utf-8') as f:
+            f.write(live_prices_content)
 
 
 def append_footer(report_path: str):

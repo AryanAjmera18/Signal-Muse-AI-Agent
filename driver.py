@@ -6,6 +6,7 @@ This driver orchestrates the entire SignalMuse pipeline by running all modules
 in the correct sequence to generate comprehensive market reports.
 
 Pipeline Order:
+0. live_prices_module - Fetch live market data and sentiment
 1. earnings_calendar - Scrape earnings data
 2. news_scraper - Scrape news articles
 3. news_csv_updater - Process and update news CSV
@@ -25,6 +26,23 @@ sys.path.insert(0, str(project_root))
 from signalmuse.utils.utils import get_logger, config
 
 logger = get_logger(__name__)
+
+
+def run_live_prices_module():
+    """Step 0: Run live prices module"""
+    logger.info("🔄 Step 0: Running live prices module...")
+    try:
+        from signalmuse.live_prices_module.main import run_live_prices_module
+        live_prices_content = run_live_prices_module()
+        if live_prices_content:
+            logger.info("✅ Live prices module completed successfully")
+            return live_prices_content
+        else:
+            logger.error("❌ Live prices module returned None")
+            return None
+    except Exception as e:
+        logger.error(f"❌ Live prices module failed: {e}")
+        return None
 
 
 def run_earnings_calendar():
@@ -138,6 +156,12 @@ def main():
     
     start_time = time.time()
     
+    # Step 0: Live Prices Module
+    live_prices_content = run_live_prices_module()
+    if live_prices_content is None:
+        logger.error("❌ Pipeline failed at Step 0. Stopping execution.")
+        return False
+    
     # Step 1: Earnings Calendar
     if not run_earnings_calendar():
         logger.error("❌ Pipeline failed at Step 1. Stopping execution.")
@@ -164,6 +188,15 @@ def main():
     if not report_path:
         logger.error("❌ Pipeline failed at Step 5.")
         return False
+    
+    # Insert live prices section at the beginning of the report
+    try:
+        from signalmuse.article_generator_module.report_builder import insert_live_prices_section
+        insert_live_prices_section(report_path, live_prices_content)
+        logger.info("✅ Live prices section inserted into report successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to insert live prices section: {e}")
+        # Continue pipeline even if insertion fails
     
     # Pipeline completed successfully
     end_time = time.time()
