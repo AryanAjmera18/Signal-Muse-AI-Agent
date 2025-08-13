@@ -1,10 +1,17 @@
+scrapy runspider .\signalmuse\earnings_calendar_module\scrapy_crawler\earnings.py
+
+uv run .\signalmuse\news_scraper_module\main.py
+
+uv run .\signalmuse\news_csv_updater_module\main.py
+
+uv run .\signalmuse\ticker_list_gen_module\main.py
+
+
+
+
 # SignalMuse: Multi-Agent Financial Analysis System
 
 **AI-powered financial news analysis with orchestrated agents for investor briefings.**
-
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Groq](https://img.shields.io/badge/LLM-Groq%20LLaMA3-green.svg)](https://groq.com/)
 
 ## Overview
 
