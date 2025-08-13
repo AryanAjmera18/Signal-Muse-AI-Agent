@@ -74,7 +74,7 @@ def test_article_generator(earnings_list: Set[str], impact_list: List[str]) -> b
         # Initialize article generator
         generator = ArticleGenerator()
         
-        # Generate articles with real data
+        # Generate articles with real data (header/footer handled in module)
         report_path = generator.generate_articles(earnings_list, impact_list)
         
         logger.info(f"✅ Article generation successful!")

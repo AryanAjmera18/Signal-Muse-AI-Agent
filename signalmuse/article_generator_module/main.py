@@ -27,12 +27,12 @@ from signalmuse.news_csv_updater_module.groq_client import GroqClientManager
 try:
     # Try relative imports first (for module import)
     from .data_loader import load_ticker_data
-    from .report_builder import create_report, append_to_report
+    from .report_builder import create_report, append_to_report, append_footer
     from .prompt_templates import EARNINGS_PROMPT, IMPACT_PROMPT
 except ImportError:
     # Fallback to absolute imports (for script execution)
     from signalmuse.article_generator_module.data_loader import load_ticker_data
-    from signalmuse.article_generator_module.report_builder import create_report, append_to_report
+    from signalmuse.article_generator_module.report_builder import create_report, append_to_report, append_footer
     from signalmuse.article_generator_module.prompt_templates import EARNINGS_PROMPT, IMPACT_PROMPT
 
 logger = get_logger(__name__)
@@ -88,6 +88,10 @@ class ArticleGenerator:
             content = self._generate_impact_content(ticker, news_data)
             append_to_report(report_path, content, 'impact')
             logger.info(f"Processed impact ticker: {ticker}")
+        
+        # Add compliance footer
+        append_footer(report_path)
+        logger.info("Added compliance footer to report")
         
         logger.info(f"✅ Report generation complete: {report_path}")
         return report_path
