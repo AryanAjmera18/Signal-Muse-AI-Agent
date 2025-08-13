@@ -11,7 +11,7 @@ from pydantic import BaseModel
 class NewsClassificationResponse(BaseModel):
     """Pydantic model for structured LLM response"""
     news_id: int
-    label: int  # 0 for Earning_Release, 1 for High_Impact
+    label: int  # 0=NONE, 1=EARNINGS, 2=IMPACT, 3=BOTH
     ticker: str
 
 class NewsClassificationPrompt:
@@ -43,12 +43,17 @@ Article {i}:
         prompt = f"""You are a financial news analyst. Your task is to classify news articles and extract company tickers.
 
 CLASSIFICATION RULES:
-- Label 0 (Earning_Release): Company has released earnings, quarterly results, or financial performance reports
-- Label 1 (High_Impact): Company has made significant business moves, acquisitions, partnerships, or market-moving announcements
+- Label 0 (NONE): Neither earnings release nor high impact news - routine market updates, general economic news
+- Label 1 (EARNINGS): Company has released earnings, quarterly results, or financial performance reports
+- Label 2 (IMPACT): Company has made significant business moves, acquisitions, partnerships, or market-moving announcements
+- Label 3 (BOTH): Both earnings-related AND high impact (e.g., major earnings surprise with significant market implications)
 
-SPECIAL CASES:
-- If BOTH earning release AND high impact apply → use label 0
-- If NEITHER applies → use label 1
+CLASSIFICATION GUIDELINES:
+- Earnings releases include: quarterly reports, earnings calls, financial results, revenue announcements
+- High impact news includes: major acquisitions, regulatory changes, CEO changes, significant product launches, major partnerships
+- If an article mentions earnings but is routine/expected, it's still Label 1
+- If an article is about market movements without specific company news, it's Label 0
+- Label 3 should be reserved for truly significant earnings news that will have major market impact
 
 TICKER EXTRACTION:
 - Extract the primary company's stock ticker symbol (e.g., AAPL, TSLA, MSFT)
@@ -63,7 +68,7 @@ Return a JSON array with this exact structure for each article:
 [
     {{
         "news_id": <article_id>,
-        "label": <0_or_1>,
+        "label": <0_1_2_or_3>,
         "ticker": "<TICKER_OR_NA>"
     }}
 ]

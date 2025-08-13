@@ -140,8 +140,10 @@ class NewsCSVUpdater:
         logger.info(f"Successfully processed: {total_processed}")
         logger.info(f"Errors encountered: {total_errors}")
         logger.info(f"Processing completion: {stats['processing_completion']:.1f}%")
-        logger.info(f"Earning Release articles (label 0): {stats['earning_release_count']}")
-        logger.info(f"High Impact articles (label 1): {stats['high_impact_count']}")
+        logger.info(f"None articles (label 0): {stats['none_count']}")
+        logger.info(f"Earnings articles (label 1): {stats['earnings_count']}")
+        logger.info(f"Impact articles (label 2): {stats['impact_count']}")
+        logger.info(f"Both articles (label 3): {stats['both_count']}")
         logger.info(f"Articles with valid tickers (excluding N/A): {stats['articles_with_ticker']}")
         logger.info("=" * 50)
 

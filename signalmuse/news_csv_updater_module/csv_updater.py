@@ -138,7 +138,7 @@ class CSVUpdater:
     
     def save_updated_csv(self, df: pd.DataFrame) -> bool:
         """
-        Save updated DataFrame as updated_news.csv
+        Save updated DataFrame as updated_news.csv, filtering out label 0 rows
         
         Args:
             df: Updated DataFrame
@@ -147,8 +147,16 @@ class CSVUpdater:
             True if save successful
         """
         try:
+            # Filter out rows with label = 0 (NONE category)
+            original_count = len(df)
+            df_filtered = df[df['label'] != 0].copy()
+            filtered_count = len(df_filtered)
+            
+            logger.info(f"Filtered out {original_count - filtered_count} rows with label 0 (NONE category)")
+            logger.info(f"Keeping {filtered_count} rows with labels 1, 2, or 3")
+            
             # Use existing utility function for consistent saving
-            output_path = save_dataframe_to_csv(df, str(self.updated_csv_path), logger)
+            output_path = save_dataframe_to_csv(df_filtered, str(self.updated_csv_path), logger)
             
             if output_path:
                 logger.info(f"Successfully saved updated CSV to: {output_path}")
@@ -194,8 +202,10 @@ class CSVUpdater:
             'total_articles': len(df),
             'articles_with_label': len(df[df['label'].notna()]),
             'articles_with_ticker': len(df[(df['ticker'].notna()) & (df['ticker'] != 'N/A')]),
-            'earning_release_count': len(df[df['label'] == 0]),
-            'high_impact_count': len(df[df['label'] == 1]),
+            'none_count': len(df[df['label'] == 0]),
+            'earnings_count': len(df[df['label'] == 1]),
+            'impact_count': len(df[df['label'] == 2]),
+            'both_count': len(df[df['label'] == 3]),
             'processing_completion': len(df[df['label'].notna()]) / len(df) * 100
         }
         
