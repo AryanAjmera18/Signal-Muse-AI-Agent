@@ -12,8 +12,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Use centralized logging
 logger = logging.getLogger(__name__)
 
 @dataclass

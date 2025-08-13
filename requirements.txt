@@ -12,3 +12,5 @@ feedparser
 asyncio
 aiohttp
 finnhub-python
+scrapy
+yfinance
