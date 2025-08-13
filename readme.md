@@ -6,6 +6,8 @@ uv run .\signalmuse\news_csv_updater_module\main.py
 
 uv run .\signalmuse\ticker_list_gen_module\main.py
 
+uv run 
+
 
 
 

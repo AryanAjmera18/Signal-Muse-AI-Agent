@@ -17,6 +17,7 @@ from signalmuse.ticker_list_gen_module.data_loader import load_updated_news_csv,
 from signalmuse.ticker_list_gen_module.query_engine import (
     get_unique_tickers_from_csv,
     compare_ticker_sets,
+    get_top_earnings_tickers,
     get_top_impact_tickers
 )
 from signalmuse.ticker_list_gen_module.utils import log_ticker_comparison
@@ -32,23 +33,52 @@ def compare_tickers(csv_tickers: Set[str], earnings_tickers: Set[str]) -> Tuple[
         earnings_tickers: Set of tickers from earnings data
         
     Returns:
-        Tuple[Set[str], Set[str]]: (final_earnings_list, v1_impact_list)
+        Tuple[Set[str], Set[str]]: (v1_earnings_list, v1_impact_list)
     """
     try:
         logger.info("Starting ticker comparison process")
         
         # Compare ticker sets
-        final_earnings_list, v1_impact_list = compare_ticker_sets(csv_tickers, earnings_tickers)
+        v1_earnings_list, v1_impact_list = compare_ticker_sets(csv_tickers, earnings_tickers)
         
         # Log comparison results
-        log_ticker_comparison(csv_tickers, earnings_tickers, final_earnings_list, v1_impact_list)
+        log_ticker_comparison(csv_tickers, earnings_tickers, v1_earnings_list, v1_impact_list)
         
-        logger.info(f"Comparison complete: {len(final_earnings_list)} earnings matches, {len(v1_impact_list)} impact candidates")
+        logger.info(f"Comparison complete: {len(v1_earnings_list)} earnings matches, {len(v1_impact_list)} impact candidates")
         
-        return final_earnings_list, v1_impact_list
+        return v1_earnings_list, v1_impact_list
         
     except Exception as e:
         logger.error(f"Error in compare_tickers: {str(e)}")
+        raise
+
+def generate_final_earnings_list(v1_earnings_list: Set[str], news_data: pd.DataFrame) -> List[str]:
+    """
+    Generate final earnings list from v1_earnings_list based on priority.
+    
+    Args:
+        v1_earnings_list: Set of tickers that match earnings data
+        news_data: DataFrame containing news data
+        
+    Returns:
+        List[str]: Top 5 unique earnings tickers sorted by priority
+    """
+    try:
+        logger.info(f"Generating final earnings list from {len(v1_earnings_list)} candidates")
+        
+        if not v1_earnings_list:
+            logger.info("V1 earnings list is empty - returning empty final earnings list")
+            return []
+        
+        # Get top earnings tickers based on priority
+        final_earnings_list = get_top_earnings_tickers(v1_earnings_list, news_data)
+        
+        logger.info(f"Final earnings list generated with {len(final_earnings_list)} tickers")
+        
+        return final_earnings_list
+        
+    except Exception as e:
+        logger.error(f"Error in generate_final_earnings_list: {str(e)}")
         raise
 
 def generate_final_impact_list(v1_impact_list: Set[str], news_data: pd.DataFrame) -> List[str]:
@@ -80,12 +110,12 @@ def generate_final_impact_list(v1_impact_list: Set[str], news_data: pd.DataFrame
         logger.error(f"Error in generate_final_impact_list: {str(e)}")
         raise
 
-def process_ticker_data() -> Tuple[Set[str], List[str]]:
+def process_ticker_data() -> Tuple[List[str], List[str]]:
     """
     Process ticker data to generate both earnings and impact lists.
     
     Returns:
-        Tuple[Set[str], List[str]]: (final_earnings_list, final_impact_list)
+        Tuple[List[str], List[str]]: (final_earnings_list, final_impact_list)
     """
     try:
         logger.info("Starting ticker data processing")
@@ -108,7 +138,10 @@ def process_ticker_data() -> Tuple[Set[str], List[str]]:
         logger.info(f"Data loaded: {len(csv_unique_tickers)} CSV tickers, {len(earnings_tickers)} earnings tickers")
         
         # Compare tickers
-        final_earnings_list, v1_impact_list = compare_tickers(csv_unique_tickers, earnings_tickers)
+        v1_earnings_list, v1_impact_list = compare_tickers(csv_unique_tickers, earnings_tickers)
+        
+        # Generate final earnings list
+        final_earnings_list = generate_final_earnings_list(v1_earnings_list, news_data)
         
         # Generate final impact list
         final_impact_list = generate_final_impact_list(v1_impact_list, news_data)
@@ -121,12 +154,12 @@ def process_ticker_data() -> Tuple[Set[str], List[str]]:
         logger.error(f"Error in process_ticker_data: {str(e)}")
         raise
 
-def validate_ticker_lists(final_earnings_list: Set[str], final_impact_list: List[str]) -> bool:
+def validate_ticker_lists(final_earnings_list: List[str], final_impact_list: List[str]) -> bool:
     """
     Validate the generated ticker lists.
     
     Args:
-        final_earnings_list: Set of tickers that match earnings data
+        final_earnings_list: List of top earnings tickers
         final_impact_list: List of top impact tickers
         
     Returns:
@@ -142,6 +175,11 @@ def validate_ticker_lists(final_earnings_list: Set[str], final_impact_list: List
             logger.warning(f"Found overlap between earnings and impact lists: {overlap}")
             return False
         
+        # Check earnings list length
+        if len(final_earnings_list) > 5:
+            logger.warning(f"Earnings list has more than 5 tickers: {len(final_earnings_list)}")
+            return False
+        
         # Check impact list length
         if len(final_impact_list) > 5:
             logger.warning(f"Impact list has more than 5 tickers: {len(final_impact_list)}")
@@ -154,12 +192,12 @@ def validate_ticker_lists(final_earnings_list: Set[str], final_impact_list: List
         logger.error(f"Error in validate_ticker_lists: {str(e)}")
         return False
 
-def get_processing_summary(final_earnings_list: Set[str], final_impact_list: List[str]) -> dict:
+def get_processing_summary(final_earnings_list: List[str], final_impact_list: List[str]) -> dict:
     """
     Generate a summary of the processing results.
     
     Args:
-        final_earnings_list: Set of tickers that match earnings data
+        final_earnings_list: List of top earnings tickers
         final_impact_list: List of top impact tickers
         
     Returns:
@@ -169,7 +207,7 @@ def get_processing_summary(final_earnings_list: Set[str], final_impact_list: Lis
         summary = {
             'earnings_tickers_count': len(final_earnings_list),
             'impact_tickers_count': len(final_impact_list),
-            'earnings_tickers': sorted(list(final_earnings_list)),
+            'earnings_tickers': final_earnings_list,
             'impact_tickers': final_impact_list,
             'total_unique_tickers': len(final_earnings_list) + len(final_impact_list),
             'validation_passed': validate_ticker_lists(final_earnings_list, final_impact_list)

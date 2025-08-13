@@ -20,7 +20,7 @@ from signalmuse.ticker_list_gen_module.config import LOG_LEVEL
 setup_logging(LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
-def generate_ticker_lists() -> Tuple[Set[str], List[str]]:
+def generate_ticker_lists() -> Tuple[List[str], List[str]]:
     """
     Main function to generate ticker lists from news and earnings data.
     
@@ -28,10 +28,10 @@ def generate_ticker_lists() -> Tuple[Set[str], List[str]]:
     1. Loads updated_news.csv and earnings_data.json
     2. Extracts unique tickers from CSV
     3. Compares CSV tickers with earnings tickers
-    4. Generates final_earnings_list (matches) and final_impact_list (top 5 by priority)
+    4. Generates final_earnings_list (top 5 by priority) and final_impact_list (top 5 by priority)
     
     Returns:
-        Tuple[Set[str], List[str]]: (final_earnings_list, final_impact_list)
+        Tuple[List[str], List[str]]: (final_earnings_list, final_impact_list)
         
     Raises:
         FileNotFoundError: If required data files are missing
@@ -88,7 +88,7 @@ def generate_ticker_lists_with_summary() -> Dict[str, Any]:
         # Create result dictionary
         result = {
             'success': True,
-            'final_earnings_list': list(final_earnings_list),
+            'final_earnings_list': final_earnings_list,
             'final_impact_list': final_impact_list,
             'summary': summary,
             'timestamp': logging.Formatter().formatTime(logging.LogRecord('', 0, '', 0, '', (), None))
@@ -124,7 +124,7 @@ def main():
         print("TICKER LIST GENERATION RESULTS")
         print("="*50)
         print(f"Earnings Tickers ({len(final_earnings_list)}):")
-        for ticker in sorted(final_earnings_list):
+        for ticker in final_earnings_list:
             print(f"  - {ticker}")
         
         print(f"\nImpact Tickers ({len(final_impact_list)}):")

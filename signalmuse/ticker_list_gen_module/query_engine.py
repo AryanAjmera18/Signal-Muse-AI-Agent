@@ -13,7 +13,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from signalmuse.ticker_list_gen_module.config import TOP_IMPACT_TICKERS_LIMIT
+from signalmuse.ticker_list_gen_module.config import TOP_IMPACT_TICKERS_LIMIT, TOP_EARNINGS_TICKERS_LIMIT
 
 logger = logging.getLogger(__name__)
 
@@ -73,20 +73,24 @@ def filter_news_by_tickers(csv_data: pd.DataFrame, ticker_list: Set[str]) -> pd.
         logger.error(f"Error in filter_news_by_tickers: {str(e)}")
         raise
 
-def sort_by_priority_and_select_top(filtered_data: pd.DataFrame, limit: int = None) -> List[str]:
+def sort_by_priority_and_select_top(filtered_data: pd.DataFrame, limit: int = None, limit_type: str = "impact") -> List[str]:
     """
     SQL-like operation: "SELECT ticker FROM filtered_data ORDER BY priority DESC LIMIT limit"
     
     Args:
         filtered_data: DataFrame containing filtered news data
         limit: Maximum number of unique tickers to return (default from config)
+        limit_type: Type of limit to apply ("earnings" or "impact")
         
     Returns:
         List[str]: List of top tickers sorted by priority
     """
     try:
         if limit is None:
-            limit = TOP_IMPACT_TICKERS_LIMIT
+            if limit_type == "earnings":
+                limit = TOP_EARNINGS_TICKERS_LIMIT
+            else:
+                limit = TOP_IMPACT_TICKERS_LIMIT
         
         if filtered_data.empty:
             logger.warning("No data to sort - returning empty list")
@@ -94,7 +98,7 @@ def sort_by_priority_and_select_top(filtered_data: pd.DataFrame, limit: int = No
         
         # Check if priority column exists
         if 'priority' not in filtered_data.columns:
-            logger.warning("Priority column not found - returning first {limit} unique tickers")
+            logger.warning(f"Priority column not found - returning first {limit} unique tickers")
             unique_tickers = filtered_data['ticker'].dropna().unique()[:limit]
             return list(unique_tickers)
         
@@ -110,12 +114,46 @@ def sort_by_priority_and_select_top(filtered_data: pd.DataFrame, limit: int = No
                 seen_tickers.add(ticker)
                 top_tickers.append(ticker)
         
-        logger.info(f"Selected top {len(top_tickers)} unique tickers by priority")
+        logger.info(f"Selected top {len(top_tickers)} unique tickers by priority for {limit_type}")
         
         return top_tickers
         
     except Exception as e:
         logger.error(f"Error in sort_by_priority_and_select_top: {str(e)}")
+        raise
+
+def get_top_earnings_tickers(v1_earnings_list: Set[str], csv_data: pd.DataFrame) -> List[str]:
+    """
+    Get top earnings tickers from v1_earnings_list based on priority.
+    
+    Args:
+        v1_earnings_list: Set of tickers that match earnings data
+        csv_data: DataFrame containing news data
+        
+    Returns:
+        List[str]: Top 5 unique earnings tickers sorted by priority
+    """
+    try:
+        if not v1_earnings_list:
+            logger.info("V1 earnings list is empty - returning empty list")
+            return []
+        
+        # Filter news data for tickers in v1_earnings_list
+        filtered_data = filter_news_by_tickers(csv_data, v1_earnings_list)
+        
+        if filtered_data.empty:
+            logger.warning(f"No news articles found for tickers in v1_earnings_list: {v1_earnings_list}")
+            return []
+        
+        # Sort by priority and select top tickers
+        top_tickers = sort_by_priority_and_select_top(filtered_data, limit_type="earnings")
+        
+        logger.info(f"Generated final earnings list with {len(top_tickers)} tickers: {top_tickers}")
+        
+        return top_tickers
+        
+    except Exception as e:
+        logger.error(f"Error in get_top_earnings_tickers: {str(e)}")
         raise
 
 def get_top_impact_tickers(v1_impact_list: Set[str], csv_data: pd.DataFrame) -> List[str]:
@@ -142,7 +180,7 @@ def get_top_impact_tickers(v1_impact_list: Set[str], csv_data: pd.DataFrame) -> 
             return []
         
         # Sort by priority and select top tickers
-        top_tickers = sort_by_priority_and_select_top(filtered_data)
+        top_tickers = sort_by_priority_and_select_top(filtered_data, limit_type="impact")
         
         logger.info(f"Generated final impact list with {len(top_tickers)} tickers: {top_tickers}")
         

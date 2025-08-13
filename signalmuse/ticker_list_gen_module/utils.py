@@ -59,23 +59,23 @@ def clean_ticker_set(tickers: Set[str]) -> Set[str]:
     return cleaned_tickers
 
 def log_ticker_comparison(csv_tickers: Set[str], earnings_tickers: Set[str], 
-                         final_earnings: Set[str], v1_impact: Set[str]) -> None:
+                         v1_earnings: Set[str], v1_impact: Set[str]) -> None:
     """
     Log ticker comparison results for debugging.
     
     Args:
         csv_tickers: Set of tickers from CSV
         earnings_tickers: Set of tickers from earnings data
-        final_earnings: Set of tickers that match earnings
-        v1_impact: Set of tickers that don't match earnings
+        v1_earnings: Set of tickers that match earnings (before priority filtering)
+        v1_impact: Set of tickers that don't match earnings (before priority filtering)
     """
     logger.info(f"CSV unique tickers: {len(csv_tickers)}")
     logger.info(f"Earnings tickers: {len(earnings_tickers)}")
-    logger.info(f"Final earnings list: {len(final_earnings)}")
+    logger.info(f"V1 earnings list: {len(v1_earnings)}")
     logger.info(f"V1 impact list: {len(v1_impact)}")
     
-    if final_earnings:
-        logger.debug(f"Earnings matches: {sorted(final_earnings)}")
+    if v1_earnings:
+        logger.debug(f"Earnings matches: {sorted(v1_earnings)}")
     if v1_impact:
         logger.debug(f"Impact candidates: {sorted(v1_impact)}")
 
