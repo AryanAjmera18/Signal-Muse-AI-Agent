@@ -55,7 +55,7 @@ class NewsCSVUpdater:
         Returns:
             True if processing completed successfully
         """
-        logger.info("Starting news CSV processing...")
+        logger.info("Starting news CSV processing")
         
         # Step 1: Load raw CSV
         df = self.csv_updater.load_raw_csv()
@@ -79,14 +79,13 @@ class NewsCSVUpdater:
         chunks = self.chunk_processor.create_chunks(df, self.chunk_size)
         total_chunks = len(chunks)
         
-        logger.info(f"Processing {total_chunks} chunks with {self.rate_limit_delay}s delays...")
         
         # Step 6: Process each chunk through LLM
         total_processed = 0
         total_errors = 0
         
         for chunk_idx, chunk_df in enumerate(chunks, 1):
-            logger.info(f"Processing chunk {chunk_idx}/{total_chunks} ({len(chunk_df)} articles)")
+            logger.debug(f"Processing chunk {chunk_idx}/{total_chunks} ({len(chunk_df)} articles)")
             
             try:
                 # Extract article fields
@@ -117,7 +116,7 @@ class NewsCSVUpdater:
         # Step 7: Save updated CSV
         if total_processed > 0:
             if self.csv_updater.save_updated_csv(df):
-                logger.info("Successfully saved updated CSV file")
+                logger.info("Saved updated CSV file")
                 
                 # Log final statistics
                 stats = self.csv_updater.get_processing_stats(df)

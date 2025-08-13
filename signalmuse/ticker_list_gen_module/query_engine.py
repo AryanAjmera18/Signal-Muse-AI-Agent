@@ -34,7 +34,7 @@ def get_unique_tickers_from_csv(csv_data: pd.DataFrame) -> Set[str]:
         # Get unique tickers, excluding null values
         unique_tickers = set(csv_data['ticker'].dropna().unique())
         
-        logger.info(f"Found {len(unique_tickers)} unique tickers in CSV data")
+        logger.debug(f"Found {len(unique_tickers)} unique tickers in CSV data")
         
         return unique_tickers
         
@@ -65,7 +65,7 @@ def filter_news_by_tickers(csv_data: pd.DataFrame, ticker_list: Set[str]) -> pd.
             csv_data['ticker'].str.upper().isin(ticker_list_upper)
         ].copy()
         
-        logger.info(f"Filtered news data: {len(csv_data)} -> {len(filtered_data)} articles for {len(ticker_list)} tickers")
+        logger.debug(f"Filtered news data: {len(csv_data)} -> {len(filtered_data)} articles for {len(ticker_list)} tickers")
         
         return filtered_data
         
@@ -114,7 +114,7 @@ def sort_by_priority_and_select_top(filtered_data: pd.DataFrame, limit: int = No
                 seen_tickers.add(ticker)
                 top_tickers.append(ticker)
         
-        logger.info(f"Selected top {len(top_tickers)} unique tickers by priority for {limit_type}")
+        logger.debug(f"Selected top {len(top_tickers)} unique tickers by priority for {limit_type}")
         
         return top_tickers
         
@@ -135,7 +135,7 @@ def get_top_earnings_tickers(v1_earnings_list: Set[str], csv_data: pd.DataFrame)
     """
     try:
         if not v1_earnings_list:
-            logger.info("V1 earnings list is empty - returning empty list")
+            logger.debug("V1 earnings list is empty - returning empty list")
             return []
         
         # Filter news data for tickers in v1_earnings_list
@@ -148,7 +148,7 @@ def get_top_earnings_tickers(v1_earnings_list: Set[str], csv_data: pd.DataFrame)
         # Sort by priority and select top tickers
         top_tickers = sort_by_priority_and_select_top(filtered_data, limit_type="earnings")
         
-        logger.info(f"Generated final earnings list with {len(top_tickers)} tickers: {top_tickers}")
+        logger.info(f"Generated final earnings list with {len(top_tickers)} tickers")
         
         return top_tickers
         
@@ -169,7 +169,7 @@ def get_top_impact_tickers(v1_impact_list: Set[str], csv_data: pd.DataFrame) -> 
     """
     try:
         if not v1_impact_list:
-            logger.info("V1 impact list is empty - returning empty list")
+            logger.debug("V1 impact list is empty - returning empty list")
             return []
         
         # Filter news data for tickers in v1_impact_list
@@ -182,7 +182,7 @@ def get_top_impact_tickers(v1_impact_list: Set[str], csv_data: pd.DataFrame) -> 
         # Sort by priority and select top tickers
         top_tickers = sort_by_priority_and_select_top(filtered_data, limit_type="impact")
         
-        logger.info(f"Generated final impact list with {len(top_tickers)} tickers: {top_tickers}")
+        logger.info(f"Generated final impact list with {len(top_tickers)} tickers")
         
         return top_tickers
         
@@ -212,7 +212,7 @@ def compare_ticker_sets(csv_tickers: Set[str], earnings_tickers: Set[str]) -> Tu
         # Find non-matches (difference)
         non_matches = csv_upper.difference(earnings_upper)
         
-        logger.info(f"Ticker comparison: {len(matches)} matches, {len(non_matches)} non-matches")
+        logger.debug(f"Ticker comparison: {len(matches)} matches, {len(non_matches)} non-matches")
         
         return matches, non_matches
         

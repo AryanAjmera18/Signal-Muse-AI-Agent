@@ -39,18 +39,17 @@ def run_news_scraper(
         Path to the generated CSV file
     """
     try:
-        logger.info("🚀 Starting News Scraper Module")
-        logger.info("=" * 50)
+        logger.info("Starting News Scraper")
         
         # Initialize scraper
         scraper = MultiSourceScraper()
         
         # Fetch news data
         if category:
-            logger.info(f"📡 Fetching news for category: {category}")
+            logger.info(f"Fetching news for category: {category}")
             df = scraper.fetch_by_category(category, max_articles=max_articles_per_feed * 5)
         else:
-            logger.info(f"📡 Fetching all feeds (max {max_articles_per_feed} articles per feed)")
+            logger.info(f"Fetching all feeds (max {max_articles_per_feed} articles per feed)")
             df = scraper.fetch_all_feeds(max_articles_per_feed=max_articles_per_feed)
         
         if df.empty:
@@ -58,7 +57,7 @@ def run_news_scraper(
             return None
         
         # Process and validate data
-        logger.info("🔧 Processing news data...")
+        logger.debug("Processing news data...")
         df = process_news_data(df)
         
         if validate_output:
@@ -67,22 +66,16 @@ def run_news_scraper(
                 return None
         
         # Save to CSV
-        logger.info("💾 Saving to CSV...")
+        logger.debug("Saving to CSV...")
         filepath = scraper.save_to_csv(df, output_filename)
         
         # Print summary
-        logger.info("✅ News scraping completed successfully!")
-        logger.info(f"📊 Summary:")
-        logger.info(f"   - Total articles: {len(df)}")
-        logger.info(f"   - Sources: {df['source'].nunique()}")
-        logger.info(f"   - Categories: {df['category'].nunique()}")
-        logger.info(f"   - Output file: {filepath}")
+        logger.info("News scraping completed successfully")
+        logger.info(f"Summary: articles={len(df)}, sources={df['source'].nunique()}, categories={df['category'].nunique()}, output={filepath}")
         
         # Show category breakdown
-        logger.info(f"📈 Articles by category:")
         category_counts = df['category'].value_counts()
-        for category_name, count in category_counts.items():
-            logger.info(f"   - {category_name}: {count} articles")
+        logger.debug(f"Articles by category: {category_counts.to_dict()}")
         
         return filepath
         

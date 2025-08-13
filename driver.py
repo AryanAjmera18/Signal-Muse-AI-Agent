@@ -134,8 +134,7 @@ def run_article_generator(earnings_list: Set[str], impact_list: List[str]):
 
 def main():
     """Main driver function that orchestrates the entire pipeline"""
-    logger.info("🚀 Starting SignalMuse AI Agent Pipeline...")
-    logger.info("=" * 60)
+    logger.info("Starting SignalMuse AI Agent Pipeline")
     
     start_time = time.time()
     
@@ -170,11 +169,9 @@ def main():
     end_time = time.time()
     duration = end_time - start_time
     
-    logger.info("=" * 60)
-    logger.info("🎉 SignalMuse AI Agent Pipeline completed successfully!")
-    logger.info(f"⏱️  Total execution time: {duration:.2f} seconds")
-    logger.info(f"📄 Final report: {report_path}")
-    logger.info("=" * 60)
+    logger.info("SignalMuse pipeline completed successfully")
+    logger.info(f"Total execution time: {duration:.2f} seconds")
+    logger.info(f"Final report: {report_path}")
     
     return True
 

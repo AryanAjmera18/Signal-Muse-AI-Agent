@@ -36,7 +36,7 @@ def compare_tickers(csv_tickers: Set[str], earnings_tickers: Set[str]) -> Tuple[
         Tuple[Set[str], Set[str]]: (v1_earnings_list, v1_impact_list)
     """
     try:
-        logger.info("Starting ticker comparison process")
+        logger.debug("Starting ticker comparison process")
         
         # Compare ticker sets
         v1_earnings_list, v1_impact_list = compare_ticker_sets(csv_tickers, earnings_tickers)
@@ -44,7 +44,7 @@ def compare_tickers(csv_tickers: Set[str], earnings_tickers: Set[str]) -> Tuple[
         # Log comparison results
         log_ticker_comparison(csv_tickers, earnings_tickers, v1_earnings_list, v1_impact_list)
         
-        logger.info(f"Comparison complete: {len(v1_earnings_list)} earnings matches, {len(v1_impact_list)} impact candidates")
+        logger.info(f"Ticker comparison: earnings={len(v1_earnings_list)}, impact={len(v1_impact_list)}")
         
         return v1_earnings_list, v1_impact_list
         
@@ -64,16 +64,16 @@ def generate_final_earnings_list(v1_earnings_list: Set[str], news_data: pd.DataF
         List[str]: Top 5 unique earnings tickers sorted by priority
     """
     try:
-        logger.info(f"Generating final earnings list from {len(v1_earnings_list)} candidates")
+        logger.debug(f"Generating final earnings list from {len(v1_earnings_list)} candidates")
         
         if not v1_earnings_list:
-            logger.info("V1 earnings list is empty - returning empty final earnings list")
+            logger.debug("V1 earnings list is empty")
             return []
         
         # Get top earnings tickers based on priority
         final_earnings_list = get_top_earnings_tickers(v1_earnings_list, news_data)
         
-        logger.info(f"Final earnings list generated with {len(final_earnings_list)} tickers")
+        logger.info(f"Final earnings tickers: {len(final_earnings_list)}")
         
         return final_earnings_list
         
@@ -93,16 +93,16 @@ def generate_final_impact_list(v1_impact_list: Set[str], news_data: pd.DataFrame
         List[str]: Top 5 unique tickers sorted by priority
     """
     try:
-        logger.info(f"Generating final impact list from {len(v1_impact_list)} candidates")
+        logger.debug(f"Generating final impact list from {len(v1_impact_list)} candidates")
         
         if not v1_impact_list:
-            logger.info("V1 impact list is empty - returning empty final impact list")
+            logger.debug("V1 impact list is empty")
             return []
         
         # Get top impact tickers based on priority
         final_impact_list = get_top_impact_tickers(v1_impact_list, news_data)
         
-        logger.info(f"Final impact list generated with {len(final_impact_list)} tickers")
+        logger.info(f"Final impact tickers: {len(final_impact_list)}")
         
         return final_impact_list
         
@@ -135,7 +135,7 @@ def process_ticker_data() -> Tuple[List[str], List[str]]:
                 if ticker:
                     earnings_tickers.add(str(ticker).strip().upper())
         
-        logger.info(f"Data loaded: {len(csv_unique_tickers)} CSV tickers, {len(earnings_tickers)} earnings tickers")
+        logger.debug(f"Data loaded: csv_tickers={len(csv_unique_tickers)}, earnings_tickers={len(earnings_tickers)}")
         
         # Compare tickers
         v1_earnings_list, v1_impact_list = compare_tickers(csv_unique_tickers, earnings_tickers)
@@ -146,7 +146,7 @@ def process_ticker_data() -> Tuple[List[str], List[str]]:
         # Generate final impact list
         final_impact_list = generate_final_impact_list(v1_impact_list, news_data)
         
-        logger.info("Ticker data processing completed successfully")
+        logger.info("Ticker data processing completed")
         
         return final_earnings_list, final_impact_list
         
@@ -185,7 +185,7 @@ def validate_ticker_lists(final_earnings_list: List[str], final_impact_list: Lis
             logger.warning(f"Impact list has more than 5 tickers: {len(final_impact_list)}")
             return False
         
-        logger.info("Ticker list validation passed")
+        logger.debug("Ticker list validation passed")
         return True
         
     except Exception as e:
@@ -213,7 +213,7 @@ def get_processing_summary(final_earnings_list: List[str], final_impact_list: Li
             'validation_passed': validate_ticker_lists(final_earnings_list, final_impact_list)
         }
         
-        logger.info(f"Processing summary: {summary['earnings_tickers_count']} earnings, {summary['impact_tickers_count']} impact")
+        logger.info(f"Summary: earnings={summary['earnings_tickers_count']}, impact={summary['impact_tickers_count']}")
         
         return summary
         

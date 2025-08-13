@@ -32,7 +32,7 @@ class CSVUpdater:
         try:
             # Reuse existing validation function
             df = validate_csv_file(str(self.raw_csv_path))
-            logger.info(f"Loaded raw CSV with {len(df)} articles")
+            logger.info(f"Loaded raw CSV: {len(df)} articles")
             
             # Verify required columns exist
             required_columns = ['title', 'summary', 'id']
@@ -63,12 +63,12 @@ class CSVUpdater:
         # Add label column if not exists
         if 'label' not in df_copy.columns:
             df_copy['label'] = None  # Will be filled during processing
-            logger.info("Added 'label' column to DataFrame")
+            logger.debug("Added 'label' column to DataFrame")
         
         # Add ticker column if not exists
         if 'ticker' not in df_copy.columns:
             df_copy['ticker'] = None  # Will be filled during processing
-            logger.info("Added 'ticker' column to DataFrame")
+            logger.debug("Added 'ticker' column to DataFrame")
         
         return df_copy
     
@@ -133,7 +133,7 @@ class CSVUpdater:
             if self.update_row_with_classification(df, news_id, label, ticker):
                 updated_count += 1
         
-        logger.info(f"Successfully updated {updated_count} out of {len(response_data)} articles")
+        logger.info(f"Updated {updated_count}/{len(response_data)} articles")
         return updated_count
     
     def save_updated_csv(self, df: pd.DataFrame) -> bool:
@@ -152,8 +152,8 @@ class CSVUpdater:
             df_filtered = df[df['label'] != 0].copy()
             filtered_count = len(df_filtered)
             
-            logger.info(f"Filtered out {original_count - filtered_count} rows with label 0 (NONE category)")
-            logger.info(f"Keeping {filtered_count} rows with labels 1, 2, or 3")
+            logger.debug(f"Filtered out {original_count - filtered_count} rows with label 0 (NONE)")
+            logger.info(f"Keeping {filtered_count} labeled rows (1/2/3)")
             
             # Use existing utility function for consistent saving
             output_path = save_dataframe_to_csv(df_filtered, str(self.updated_csv_path), logger)
@@ -182,7 +182,7 @@ class CSVUpdater:
         try:
             backup_path = self.data_dir / f"raw_news_backup_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.csv"
             save_dataframe_to_csv(df, str(backup_path), logger)
-            logger.info(f"Created backup at: {backup_path}")
+            logger.debug(f"Created backup at: {backup_path}")
             return True
         except Exception as e:
             logger.error(f"Failed to create backup: {e}")

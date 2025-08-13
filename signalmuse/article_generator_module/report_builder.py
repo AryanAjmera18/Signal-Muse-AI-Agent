@@ -37,7 +37,7 @@ def create_report() -> str:
         f.write(f"# UnBound X Morning Market Briefing\n")
         f.write(f"📅 Date: {date_str}\n\n")
         f.write(f"Generated: {timestamp_str}\n")
-        f.write(f"Top 7 Articles with Individual AI Analysis\n\n")
+        f.write(f"Top Articles with Individual AI Analysis\n\n")
         f.write("---\n\n")
     
     return str(report_path)

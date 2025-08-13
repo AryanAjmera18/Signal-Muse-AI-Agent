@@ -51,7 +51,7 @@ class ArticleGenerator:
         self.groq_manager = GroqClientManager(rate_limit_delay)
         # Get the raw Groq client for simple text generation
         self.groq_client = self.groq_manager.client.client if self.groq_manager.is_available() else None
-        logger.info("ArticleGenerator initialized")
+        logger.debug("ArticleGenerator initialized")
         
     def generate_articles(self, earnings_list: Set[str], impact_list: List[str]) -> str:
         """
@@ -64,7 +64,7 @@ class ArticleGenerator:
         Returns:
             str: Path to generated report file
         """
-        logger.info(f"Processing {len(earnings_list)} earnings + {len(impact_list)} impact tickers")
+        logger.info(f"Generating report: earnings={len(earnings_list)}, impact={len(impact_list)}")
         
         if not self.groq_client:
             logger.error("Groq client not available")
@@ -75,25 +75,25 @@ class ArticleGenerator:
         
         # Create report and append sections progressively
         report_path = create_report()
-        logger.info(f"Created report file: {report_path}")
+        logger.debug(f"Created report file: {report_path}")
         
         # Process earnings tickers (1 at a time for consistency)
         for ticker in earnings_list:
             content = self._generate_earnings_content(ticker, earnings_data, news_data)
             append_to_report(report_path, content, 'earnings')
-            logger.info(f"Processed earnings ticker: {ticker}")
+            logger.debug(f"Processed earnings ticker: {ticker}")
         
         # Process impact tickers (1 at a time as specified)
         for ticker in impact_list:
             content = self._generate_impact_content(ticker, news_data)
             append_to_report(report_path, content, 'impact')
-            logger.info(f"Processed impact ticker: {ticker}")
+            logger.debug(f"Processed impact ticker: {ticker}")
         
         # Add compliance footer
         append_footer(report_path)
-        logger.info("Added compliance footer to report")
+        logger.debug("Added compliance footer to report")
         
-        logger.info(f"✅ Report generation complete: {report_path}")
+        logger.info(f"Report generation complete: {report_path}")
         return report_path
     
     def _generate_earnings_content(self, ticker: str, earnings_data: dict, news_data: dict) -> str:
@@ -134,7 +134,7 @@ class ArticleGenerator:
 def main():
     """Entry point for standalone execution"""
     try:
-        logger.info("=== Article Generator Module Test ===")
+        logger.debug("Article Generator Module Test")
         
         # Check if running in correct environment
         if not config.has_groq_api:
@@ -148,7 +148,7 @@ def main():
         generator = ArticleGenerator()
         report_path = generator.generate_articles(earnings_list, impact_list)
         
-        logger.info(f"✅ Article generation complete: {report_path}")
+        logger.info(f"Article generation complete: {report_path}")
         return True
         
     except Exception as e:

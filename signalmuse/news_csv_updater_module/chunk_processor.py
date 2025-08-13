@@ -40,9 +40,9 @@ class ChunkProcessor:
         for i in range(0, total_rows, chunk_size):
             chunk = df.iloc[i:i + chunk_size].copy()
             chunks.append(chunk)
-            logger.info(f"Created chunk {len(chunks)} with {len(chunk)} articles")
+            logger.debug(f"Created chunk {len(chunks)} with {len(chunk)} articles")
         
-        logger.info(f"Total chunks created: {len(chunks)}")
+        logger.debug(f"Total chunks created: {len(chunks)}")
         return chunks
     
     def extract_article_fields(self, chunk_df: pd.DataFrame) -> List[Dict]:
@@ -108,7 +108,7 @@ class ChunkProcessor:
             
             # Extract content
             response_content = response.choices[0].message.content.strip()
-            logger.info(f"LLM response received: {response_content[:100]}...")
+            logger.debug(f"LLM response received: {response_content[:100]}...")
             
             # Parse JSON response
             return self.parse_llm_response(response_content)
@@ -157,7 +157,7 @@ class ChunkProcessor:
                     logger.warning(f"Invalid item in response: {item}, error: {ve}")
                     continue
             
-            logger.info(f"Successfully parsed {len(validated_results)} valid classifications")
+            logger.debug(f"Parsed {len(validated_results)} valid classifications")
             return validated_results
             
         except json.JSONDecodeError as e:

@@ -26,7 +26,7 @@ def validate_csv_format(df: pd.DataFrame) -> bool:
         logger.error(f"Missing required columns: {missing_columns}")
         return False
     
-    logger.info(f"CSV format validation passed. Found {len(df)} articles.")
+    logger.info(f"CSV format validation passed: {len(df)} articles")
     return True
 
 def process_news_data(df: pd.DataFrame) -> pd.DataFrame:
@@ -68,7 +68,7 @@ def process_news_data(df: pd.DataFrame) -> pd.DataFrame:
     final_count = len(processed_df)
     
     if initial_count != final_count:
-        logger.info(f"Removed {initial_count - final_count} duplicate articles")
+        logger.debug(f"Removed {initial_count - final_count} duplicate articles")
     
-    logger.info(f"Processed {len(processed_df)} articles")
+    logger.debug(f"Processed {len(processed_df)} articles")
     return processed_df
