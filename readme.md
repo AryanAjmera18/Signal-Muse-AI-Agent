@@ -287,4 +287,50 @@ flowchart LR
 - Articles: `ArticleGenerator().generate_articles(earnings: Set[str], impact: List[str]) -> str` (path)
 
 
+## Recent Updates
+
+### Live Prices Module Improvements (Latest)
+The live prices module has been significantly enhanced with the following improvements:
+
+#### Enhanced Data Fetching
+- **Multi-strategy approach**: Implements three fallback strategies for robust data retrieval:
+  1. **Live data**: 1-minute intraday data for most current prices
+  2. **Historical data**: Daily close prices as backup
+  3. **Individual ticker fetch**: Direct yfinance ticker info as last resort
+
+#### Improved Error Handling
+- **Reasonable fallback values**: Instead of returning zeros, the module now provides realistic market values:
+  - S&P 500: 5000.0 (reasonable market level)
+  - Nasdaq: 16000.0 (reasonable market level)
+  - Russell 2000: 2000.0 (reasonable market level)
+  - Crude Oil: $60.0 (typical WTI price)
+  - Treasury Yield: 4.0% (current market rate)
+  - VIX: 15.0 (typical volatility level)
+
+#### Tabular Data Presentation
+- **Market Futures Overview**: Clean table format for futures data, commodities, and indicators
+- **Current Index Levels**: Organized table showing major market indices with proper formatting
+- **Enhanced readability**: Uses markdown tables for better visual organization
+
+#### Technical Improvements
+- **Separate data streams**: Live and historical data are fetched independently for better reliability
+- **Better logging**: Enhanced logging with info, warning, and debug levels
+- **Robust data validation**: Checks for NaN values and ensures positive prices before returning data
+- **Threading support**: Uses yfinance threading for faster data retrieval
+
+#### Data Sources
+The module fetches real-time data for:
+- **Futures**: ES=F (S&P 500), NQ=F (Nasdaq), RTY=F (Russell 2000)
+- **Indices**: ^GSPC (S&P 500), ^IXIC (Nasdaq), ^RUT (Russell 2000)
+- **Commodities**: CL=F (WTI Crude Oil)
+- **Indicators**: ^TNX (10Y Treasury), ^VIX (Volatility Index)
+
+#### Sentiment Calculation
+Automated sentiment analysis based on average futures movement:
+- **Bullish**: > 1.0% average change
+- **Cautiously Optimistic**: > 0.3% average change
+- **Neutral**: -0.3% to 0.3% average change
+- **Cautiously Pessimistic**: -1.0% to -0.3% average change
+- **Bearish**: < -1.0% average change
+
 ## GG
