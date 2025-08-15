@@ -1,336 +1,332 @@
-## SignalMuse AI Agent
+# SignalMuse AI Agent - Hybrid Market Intelligence Pipeline
 
-Enterprise-grade, modular AI pipeline that scrapes market news and earnings, classifies and enriches articles with LLMs, builds prioritized ticker lists, fetches live prices/sentiment, and generates a polished newspaper-style markdown report.
+Enterprise-grade, modular AI pipeline that scrapes market news and earnings, classifies and enriches articles with LLMs, builds prioritized ticker lists, fetches live prices/sentiment, and generates a polished morning brief format report.
 
-### Key Capabilities
-- Live prices and sentiment with `yfinance`
-- Earnings calendar scraping via `scrapy`
-- Multi-source RSS scraping and normalization
-- LLM-based classification and ticker extraction (Groq)
-- Deterministic ticker list generation and prioritization
-- Structured markdown report generation with sources and compliance
+## Key Capabilities
+
+- **Complete Pipeline Orchestration**: Automated end-to-end data collection and processing
+- **Live Market Data**: Real-time prices, sentiment, and market indicators via `yfinance`
+- **Earnings Intelligence**: Automated earnings calendar scraping via `scrapy`
+- **Multi-Source News**: RSS scraping and normalization from major financial sources
+- **LLM-Powered Analysis**: Groq-based classification, ticker extraction, and content generation
+- **Smart Ticker Prioritization**: Deterministic ticker list generation with market impact scoring
+- **Morning Brief Format**: Professional, compact one-page market intelligence reports
+- **Economic Indicators**: Real-time economic data from FRED API and multiple sources
+- **Fed Commentary**: Structured Fed speak tracking and upcoming events
+
+
+## Architecture Overview
+
+### Pipeline Flow
+```mermaid
+flowchart TD
+    A[new_driver.py] --> B[Earnings Calendar]
+    A --> C[News Scraper]
+    A --> D[News CSV Updater]
+    A --> E[Ticker List Generator]
+    A --> F[Hybrid Report Generator]
+    
+    B --> G[earnings_data.json]
+    C --> H[raw_news.csv]
+    D --> I[updated_news.csv]
+    E --> J[Earnings List]
+    E --> K[Impact List]
+    
+    F --> L[Morning Brief Report]
+    
+    G --> D
+    H --> D
+    I --> E
+    J --> F
+    K --> F
+    
+    subgraph "Data Sources"
+        M[MarketWatch]
+        N[RSS Feeds]
+        O[Yahoo Finance]
+        P[FRED API]
+    end
+    
+    M --> B
+    N --> C
+    O --> F
+    P --> F
+```
 
 ## Quickstart
 
 ### Prerequisites
 - Python 3.10+
-- Windows PowerShell or a Unix shell
-- API key: Groq (`GROQ_API_KEY`)
+- Windows PowerShell or Unix shell
+- **Required API Key**: Groq (`GROQ_API_KEY`)
 
 ### Installation
 ```powershell
+# Create virtual environment
 python -m venv .venv
 
+# Activate environment
 .\.venv\Scripts\activate
 
+# Install dependencies
 pip install -r requirements.txt
 
-# Required extras not in requirements.txt today:
+# Install additional required packages
 pip install yfinance scrapy
+
+# Setup environment
 Copy-Item env.template .env
-
 ```
 
-Edit `.env` and set at least:
-- `GROQ_API_KEY` (required)
-- `FINNHUB_API_KEY` (optional)
+### Environment Configuration
+Edit `.env` and set:
+```bash
+GROQ_API_KEY=your_groq_api_key_here  # Required
+```
 
-### Run the full pipeline
+### Run the Complete Pipeline
 ```powershell
-python .\driver.py
+python new_driver.py
 ```
 
-### Run modules individually
-- Earnings calendar → writes `signalmuse/data/real/earnings_data.json`:
-```powershell
-scrapy runspider .\signalmuse\earnings_calendar_module\scrapy_crawler\earnings.py
-# or
-python -m scrapy runspider .\signalmuse\earnings_calendar_module\scrapy_crawler\earnings.py
-```
-- News scraper → writes `signalmuse/data/real/raw_news.csv`:
-```powershell
-python .\signalmuse\news_scraper_module\main.py --max-articles 20
-```
-- News CSV updater (LLM classify + ticker extraction) → writes `updated_news.csv`:
-```powershell
-python .\signalmuse\news_csv_updater_module\main.py
-```
-- Ticker list generator → prints two lists to console and returns from API:
-```powershell
-python .\signalmuse\ticker_list_gen_module\main.py
-```
-- Article generator → writes `signalmuse/outputs/market_report_*.md`:
-```powershell
-python .\signalmuse\article_generator_module\main.py
-```
-- Live prices generator → writes `signalmuse/outputs/market_report_*.md`:
-```powershell
-python .\signalmuse\live_prices_module\main.py
-```
+The pipeline will:
+1. Scrape earnings data from MarketWatch
+2. Collect news from multiple RSS sources
+3. Process and classify news with LLM
+4. Generate prioritized ticker lists
+5. Create a comprehensive morning brief report
 
-## Repository Layout
-```text
-signalmuse/
-  live_prices_module/           # Live prices + sentiment → markdown section
-  earnings_calendar_module/     # Scrapy spider → earnings_data.json
-  news_scraper_module/          # Multi-source RSS → raw_news.csv
-  news_csv_updater_module/      # LLM classify/extract → updated_news.csv
-  ticker_list_gen_module/       # Build earnings/impact ticker lists
-  article_generator_module/     # LLM report builder → market_report_*.md
-  data/real/                    # Input/output working data files
-  outputs/                      # Generated markdown reports
-utils/                          # Logging, config, IO utilities
-driver.py                       # Orchestrates the end-to-end pipeline
-```
+**Output**: `signalmuse/outputs/UnBound_Hybrid_Brief_YYYY-MM-DD_HHMM.md`
 
-## End-to-End Pipeline Orchestration
-The driver runs modules in this order and stitches outputs together:
-
-1) Live prices module
-   - `signalmuse.live_prices_module.main.run_live_prices_module()`
-   - Returns a fully formatted markdown section (with sentiment signal)
-
-2) Earnings calendar
-   - Runs Scrapy spider `earnings_calendar_module/scrapy_crawler/earnings.py`
-   - Writes `signalmuse/data/real/earnings_data.json`
-
-3) News scraper
-   - `signalmuse.news_scraper_module.main.run_news_scraper()`
-   - Writes `signalmuse/data/real/raw_news.csv`
-
-4) News CSV updater
-   - `signalmuse.news_csv_updater_module.main.NewsCSVUpdater.process_news_csv()`
-   - Chunks CSV in size 10; prompts LLM; updates `label` and `ticker`
-   - Filters out label 0 and writes `updated_news.csv`
-
-5) Ticker list generator
-   - `signalmuse.ticker_list_gen_module.main.generate_ticker_lists()`
-   - Returns `(final_earnings_list, final_impact_list)`
-
-6) Article generator
-   - `signalmuse.article_generator_module.main.ArticleGenerator.generate_articles()`
-   - Builds report file, appends sections, adds compliance footer
-   - Driver inserts live prices section at top via `insert_live_prices_section`
-
-### Driver success criteria
-- Each step must succeed before progressing. Any failure stops pipeline early except live-prices insertion (non-fatal).
-
-## Architecture Diagram
-```mermaid
-flowchart LR
-    subgraph "Driver"
-        D["driver.py"]
-    end
-
-    subgraph "Live Prices"
-        LP["live_prices_module/main.py\nrun_live_prices_module"]
-        LP_OUT["md section"]
-    end
-
-    subgraph "Earnings Calendar"
-        E["earnings.py (Scrapy)"]
-        ED["earnings_data.json"]
-    end
-
-    subgraph "News Scraper"
-        NS["news_scraper_module/main.py\nrun_news_scraper"]
-        RN["raw_news.csv"]
-    end
-
-    subgraph "CSV Updater (LLM)"
-        NU["NewsCSVUpdater\nchunk→LLM→update"]
-        UN["updated_news.csv"]
-    end
-
-    subgraph "Ticker List Gen"
-        TL["generate_ticker_lists"]
-        L1["final_earnings_list"]
-        L2["final_impact_list"]
-    end
-
-    subgraph "Article Generator"
-        AG["ArticleGenerator.generate_articles"]
-        R["market_report_*.md"]
-    end
-
-    D --> LP --> LP_OUT
-    D --> E --> ED
-    D --> NS --> RN
-    D --> NU
-    RN --> NU
-    ED --> NU
-    NU --> UN
-    D --> TL
-    UN --> TL
-    ED --> TL
-    TL --> L1
-    TL --> L2
-    D --> AG
-    L1 --> AG
-    L2 --> AG
-    UN --> AG
-    ED --> AG
-    AG --> R
-    LP_OUT -. inserted at top .-> R
-
-    subgraph "External/Infra"
-        ENV[".env: GROQ_API_KEY"]
-        GROQ["Groq API"]
-        RSS["RSS feeds"]
-    end
-
-    ENV --> NU
-    ENV --> AG
-    NS --> RSS
-    NU --> GROQ
-    AG --> GROQ
-
+## Repository Structure
 
 ```
-
-## Data Contracts
-
-### raw_news.csv (news_scraper_module)
-- Columns: `title, link, summary, published, source, category, priority, guid, author, tags, id`
-- `id`: deterministic 5-digit string per article (see `multi_source_scraper._generate_article_id`)
-
-### updated_news.csv (news_csv_updater_module)
-- Inherits columns from `raw_news.csv`, plus:
-- `label` and `ticker`
-- Label mapping used by code:
-  - 0 = NONE
-  - 1 = EARNINGS
-  - 2 = IMPACT
-  - 3 = BOTH
-- Save behavior: rows with `label == 0` are filtered out when writing `updated_news.csv`.
-
-### earnings_data.json (earnings_calendar_module)
-- Array of objects with fields like `company_name, ticker, earnings_date, eps_forecast, eps_actual, surprise, scraped_at, source, source_url`
-
-### Report markdown (article_generator_module)
-- Header (UnBound X branding)
-- Live prices section (inserted by driver)
-- Earnings section (per ticker)
-- Market impact section (per ticker)
-- Compliance footer
+Signal-Muse-AI-Agent/
+├── new_driver.py                    # Main pipeline orchestrator
+├── test_new_driver.py              # Basic functionality tests
+├── test_real_data.py               # Economic data tests
+├── requirements.txt                # Python dependencies
+├── env.template                    # Environment template
+├── readme.md                       # This file
+└── signalmuse/
+    ├── earnings_calendar_module/   # Scrapy spider for earnings
+    ├── news_scraper_module/        # Multi-source RSS scraper
+    ├── news_csv_updater_module/    # LLM classification & enrichment
+    ├── ticker_list_gen_module/     # Ticker prioritization
+    ├── live_prices_module/         # Real-time market data
+    ├── morning_brief_module/       # Economic indicators & formatting
+    ├── article_generator_module/   # Legacy report generator
+    ├── data/real/                  # Working data files
+    │   ├── earnings_data.json     # Scraped earnings data
+    │   ├── raw_news.csv           # Raw RSS articles
+    │   └── updated_news.csv       # LLM-processed articles
+    └── outputs/                    # Generated reports
+        └── UnBound_Hybrid_Brief_*.md
+```
 
 ## Module Reference
 
-### Live Prices Module
-- File: `signalmuse/live_prices_module/main.py`
-- Public API: `run_live_prices_module() -> str`
-- Sources tickers via `yfinance` in one batch: ES=F, NQ=F, RTY=F, ^GSPC, ^IXIC, ^RUT, CL=F, ^TNX, ^VIX
-- Sentiment rules on average futures change:
-  - > 1.0 → Bullish
-  - > 0.3 → Cautiously Optimistic
-  - > -0.3 → Neutral
-  - > -1.0 → Cautiously Pessimistic
-  - else → Bearish
-- Output: deterministic markdown section for insertion at top of report.
+### 1. Earnings Calendar Module
+- **File**: `signalmuse/earnings_calendar_module/scrapy_crawler/earnings.py`
+- **Function**: Scrapes earnings data from MarketWatch
+- **Output**: `signalmuse/data/real/earnings_data.json`
+- **Data Format**: JSON array with company info, EPS data, surprises
 
-### Earnings Calendar Module
-- File: `signalmuse/earnings_calendar_module/scrapy_crawler/earnings.py`
-- Command: see Quickstart
-- Notes: obeys a polite download delay; may be blocked by Cloudflare. Writes `earnings_data.json`.
+### 2. News Scraper Module
+- **File**: `signalmuse/news_scraper_module/main.py`
+- **Function**: Multi-source RSS scraping and normalization
+- **Sources**: Bloomberg, CNBC, MarketWatch, Reuters, Yahoo Finance
+- **Output**: `signalmuse/data/real/raw_news.csv`
+- **Features**: Deduplication, priority scoring, source tracking
 
-### News Scraper Module
-- Entrypoint: `signalmuse/news_scraper_module/main.py`
-- Core: `scraper/multi_source_scraper.py` with configurable feeds in `scraper/feed_config.py`
-- Processing/validation: `pipeline/data_processor.py`
-- Output: `raw_news.csv`
+### 3. News CSV Updater Module
+- **File**: `signalmuse/news_csv_updater_module/main.py`
+- **Function**: LLM-powered article classification and ticker extraction
+- **LLM**: Groq API with rate limiting (5-second delays)
+- **Processing**: Chunks of 10 articles, JSON response parsing
+- **Output**: `signalmuse/data/real/updated_news.csv`
+- **Classification**: EARNINGS (1), IMPACT (2), BOTH (3), NONE (0)
 
-### News CSV Updater (LLM)
-- Entrypoint class: `NewsCSVUpdater`
-- Components:
-  - `GroqClientManager` (rate limiting, client setup)
-  - `ChunkProcessor` (chunk=10, extract `id,title,summary`, build prompt, parse JSON)
-  - `CSVUpdater` (backup, add new columns, integrate responses, filter+save)
-- Prompt contract: strict JSON array of `{news_id, label, ticker}`
-- Rate limiting: default 5 seconds between calls
+### 4. Ticker List Generator Module
+- **File**: `signalmuse/ticker_list_gen_module/main.py`
+- **Function**: Generates prioritized ticker lists
+- **Logic**: 
+  - Earnings list: Intersection of news tickers and earnings data
+  - Impact list: High-priority news tickers not in earnings
+- **Limits**: Top 5 tickers per category
+- **Output**: `(earnings_list: Set[str], impact_list: List[str])`
 
-### Ticker List Generator
-- Entrypoint: `generate_ticker_lists() -> (final_earnings_list, final_impact_list)`
-- Logic:
-  - Extract unique CSV tickers from `updated_news.csv`
-  - Intersect vs earnings tickers from `earnings_data.json`
-  - v1 buckets: matches → earnings; non-matches → impact
-  - For each bucket, sort corresponding articles by `priority` and select top 5 unique tickers
+### 5. Live Prices Module
+- **File**: `signalmuse/live_prices_module/main.py`
+- **Function**: Real-time market data and sentiment analysis
+- **Data Sources**: Yahoo Finance (yfinance)
+- **Indicators**: S&P 500, Nasdaq, Russell 2000, VIX, Treasury yields, oil
+- **Sentiment**: Automated based on futures movement
+- **Output**: MarketData object with current levels and sentiment
 
-### Article Generator
-- Entrypoint class: `ArticleGenerator`
-- Method: `generate_articles(earnings_list: Set[str], impact_list: List[str]) -> str`
-- Data loading: reuses `ticker_list_gen_module.data_loader`
-- Prompts: `article_generator_module/prompt_templates.py`
-- Appending pattern: `report_builder.py` (adds section headers once, appends sources, and a compliance footer)
-- Note: current implementation generates one ticker per LLM call for both earnings and impact (batching can be added later).
+### 6. Hybrid Report Generator (new_driver.py)
+- **Class**: `HybridReportGenerator`
+- **Function**: Creates morning brief format reports
+- **Features**:
+  - Ticker-specific headlines and earnings processing
+  - LLM-generated market summaries
+  - Economic indicators from multiple sources
+  - Fed commentary and upcoming events
+  - Compact one-page layout
 
-## Operations Runbook
+## 📊 Data Contracts
 
-## Troubleshooting
-- Earnings spider blocked: rerun later or switch source. Cloudflare may throttle.
-- `raw_news.csv`/`earnings_data.json` not found: run scraper/earnings steps first.
-- LLM response parsing errors: module logs the raw snippet; ensure the model returns a pure JSON array.
+### earnings_data.json
+```json
+[
+  {
+    "company_name": "Apple Inc.",
+    "ticker": "AAPL",
+    "fiscal_quarter": "06/30/2025",
+    "eps_forecast": "1.25",
+    "eps_actual": "1.30",
+    "surprise": "0.05 (4.00%)",
+    "source": "marketwatch",
+    "scraped_at": "2025-08-15T14:46:04.647259"
+  }
+]
+```
 
-## Extensibility
-- Add RSS sources: edit `news_scraper_module/scraper/feed_config.py`.
-- Change label mapping: update `NewsClassificationResponse` and downstream logic in `CSVUpdater.save_updated_csv`.
-- Adjust ticker limits: `ticker_list_gen_module/config.py` (`TOP_EARNINGS_TICKERS_LIMIT`, `TOP_IMPACT_TICKERS_LIMIT`).
-- Swap models: update model names in `news_csv_updater_module/chunk_processor.py` and `article_generator_module/main.py`.
+### raw_news.csv
+- **Columns**: `title, link, summary, published, source, category, priority, guid, author, tags, id`
+- **id**: Deterministic 5-digit string per article
+- **priority**: Source-based priority scoring
 
-## API Summary (for integrators)
-- Driver: run `python driver.py`; returns exit code 0 on success.
-- Live prices: `run_live_prices_module() -> str` (md section)
-- Earnings: CLI `scrapy runspider` (writes JSON)
-- News scraper: `run_news_scraper(...) -> str | None` (path)
-- CSV updater: `NewsCSVUpdater().process_news_csv() -> bool`
-- Ticker lists: `generate_ticker_lists() -> (List[str], List[str])`
-- Articles: `ArticleGenerator().generate_articles(earnings: Set[str], impact: List[str]) -> str` (path)
+### updated_news.csv
+- **Inherits**: All columns from `raw_news.csv`
+- **Added**: `label, ticker`
+- **Label Mapping**:
+  - 0 = NONE (filtered out)
+  - 1 = EARNINGS
+  - 2 = IMPACT  
+  - 3 = BOTH
+
+## 🎯 Morning Brief Report Format
 
 
-## Recent Updates
+###### [**CLICK HERE to view Latest Morning Brief Report**](signalmuse/outputs/UnBound_Hybrid_Brief_2025-08-15_1513.md)
 
-### Live Prices Module Improvements (Latest)
-The live prices module has been significantly enhanced with the following improvements:
+### Market Outlook Section
+- LLM-generated 2-3 sentence market summary
+- Current market sentiment and key drivers
 
-#### Enhanced Data Fetching
-- **Multi-strategy approach**: Implements three fallback strategies for robust data retrieval:
-  1. **Live data**: 1-minute intraday data for most current prices
-  2. **Historical data**: Daily close prices as backup
-  3. **Individual ticker fetch**: Direct yfinance ticker info as last resort
+### Key Metrics Table
+- S&P 500, Dow Jones, Nasdaq levels and changes
+- VIX (Fear Index) and Treasury yields
+- Real-time data from Yahoo Finance
 
-#### Improved Error Handling
-- **Reasonable fallback values**: Instead of returning zeros, the module now provides realistic market values:
-  - S&P 500: 5000.0 (reasonable market level)
-  - Nasdaq: 16000.0 (reasonable market level)
-  - Russell 2000: 2000.0 (reasonable market level)
-  - Crude Oil: $60.0 (typical WTI price)
-  - Treasury Yield: 4.0% (current market rate)
-  - VIX: 15.0 (typical volatility level)
+### Economic Data Table
+- Non-Farm Payrolls, Unemployment Rate
+- Inflation (CPI), PMI Manufacturing, PMI Services
+- Real data from FRED API with fallbacks
 
-#### Tabular Data Presentation
-- **Market Futures Overview**: Clean table format for futures data, commodities, and indicators
-- **Current Index Levels**: Organized table showing major market indices with proper formatting
-- **Enhanced readability**: Uses markdown tables for better visual organization
+### Fed Commentary
+- Recent quotes from Fed officials
+- Upcoming speeches and events
+- Structured bullet-point format
 
-#### Technical Improvements
-- **Separate data streams**: Live and historical data are fetched independently for better reliability
-- **Better logging**: Enhanced logging with info, warning, and debug levels
-- **Robust data validation**: Checks for NaN values and ensures positive prices before returning data
-- **Threading support**: Uses yfinance threading for faster data retrieval
+### Top Headlines
+- Market-moving headlines for impact tickers
+- Scoring based on earnings, Fed, deals, major companies
+- Source attribution and impact scores
 
-#### Data Sources
-The module fetches real-time data for:
-- **Futures**: ES=F (S&P 500), NQ=F (Nasdaq), RTY=F (Russell 2000)
-- **Indices**: ^GSPC (S&P 500), ^IXIC (Nasdaq), ^RUT (Russell 2000)
-- **Commodities**: CL=F (WTI Crude Oil)
-- **Indicators**: ^TNX (10Y Treasury), ^VIX (Volatility Index)
+### Earnings Update
+- Ticker-specific earnings summaries
+- LLM-generated 2-line analysis per company
+- EPS data with surprises and forecasts
 
-#### Sentiment Calculation
-Automated sentiment analysis based on average futures movement:
-- **Bullish**: > 1.0% average change
-- **Cautiously Optimistic**: > 0.3% average change
-- **Neutral**: -0.3% to 0.3% average change
-- **Cautiously Pessimistic**: -1.0% to -0.3% average change
-- **Bearish**: < -1.0% average change
+## 🔧 Configuration
 
-## GG
+### Environment Variables
+```bash
+GROQ_API_KEY=your_api_key_here  # Required for LLM processing
+```
+
+### Ticker Limits
+- **Earnings tickers**: Top 5 from earnings data intersection
+- **Impact tickers**: Top 5 from high-priority news
+- **Configurable**: In `ticker_list_gen_module/config.py`
+
+## 🔄 Extensibility
+
+### Adding News Sources
+Edit `signalmuse/news_scraper_module/scraper/feed_config.py`:
+```python
+RSS_FEEDS = [
+    RSSFeed(
+        id="new_source",
+        name="New Source",
+        url="https://new-source.com/rss",
+        category="finance",
+        priority=5
+    )
+]
+```
+
+### Modifying Economic Indicators
+Update `_get_economic_indicators()` in `new_driver.py`:
+```python
+indicator_order = [
+    ('new_indicator', 'New Indicator'),
+    # ... existing indicators
+]
+```
+
+### Changing LLM Models
+Update model names in relevant modules:
+```python
+model="llama-3.1-8b-instant"  # Current model
+```
+
+### Adjusting Ticker Limits
+Edit `signalmuse/ticker_list_gen_module/config.py`:
+```python
+TOP_EARNINGS_TICKERS_LIMIT = 10  # Increase from 5
+TOP_IMPACT_TICKERS_LIMIT = 10    # Increase from 5
+```
+
+## 📈 Performance
+
+### Execution Time
+- **Full pipeline**: ~ Under 5 minutes (including rate limiting)
+- **News processing**: ~2-3 minutes (LLM calls)
+- **Report generation**: Sub 1 minute
+
+### Data Freshness
+- **Market data**: Real-time (1-minute delay)
+- **News**: RSS feed dependent (5-15 minute delay)
+- **Earnings**: Daily scraping from MarketWatch
+- **Economic indicators**: Monthly updates from FRED
+
+## Development Setup
+
+```powershell
+# Clone repository
+git clone <repository-url>
+cd Signal-Muse-AI-Agent
+
+# Setup development environment
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+pip install yfinance scrapy
+
+# Run tests
+python test_new_driver.py
+python test_real_data.py
+```
+## 📄 License
+
+This project is for educational use only. Please ensure compliance with:
+- RSS feed terms of service
+- API usage agreements
+- Data source licensing requirements
+
+---
+
+**SignalMuse AI Agent** - Professional market intelligence powered by AI
