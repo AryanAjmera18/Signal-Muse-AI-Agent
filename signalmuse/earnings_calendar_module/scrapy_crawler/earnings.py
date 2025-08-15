@@ -105,7 +105,7 @@ class EarningsSpider(scrapy.Spider):
                     
                     # Add additional data if available
                     if len(data_cells) > 0:
-                        earnings_item['earnings_date'] = self._extract_text(data_cells[0].css('div.cell__content::text'))
+                        earnings_item['fiscal_quarter']= self._extract_text(data_cells[0].css('div.cell__content::text'))
                     if len(data_cells) > 1:
                         earnings_item['eps_forecast'] = self._extract_text(data_cells[1].css('div.cell__content::text'))
                     if len(data_cells) > 2:
