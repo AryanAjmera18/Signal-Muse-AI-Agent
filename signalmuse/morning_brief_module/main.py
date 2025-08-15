@@ -157,13 +157,13 @@ class MorningBriefGenerator:
         earnings_snapshot = kwargs['earnings_snapshot']
         
         # Format key indicators in table format
-        key_indicators = f"""| **Index/Indicator** | **Change** | **Current Level** |
-|-------------------|------------|------------------|
-| **S&P 500** | {market_data.sp500_futures:+.2f}% | {market_data.sp500_current:,.2f} |
-| **Dow Jones Industrial Average** | {market_data.sp500_futures:+.2f}% | {market_data.sp500_current * 0.95:,.2f} |
-| **Nasdaq Composite** | {market_data.nasdaq_futures:+.2f}% | {market_data.nasdaq_current:,.2f} |
-| **Fear Index (VIX)** | - | {market_data.vix:.1f} |
-| **10-Year Treasury Yield** | - | {market_data.treasury_yield:.2f}% |"""
+        key_indicators = f"""| **Index/Indicator** | **Current Level** | **Change** |
+|-------------------|------------------|------------|
+| **S&P 500** | {market_data.sp500_current:,.2f} | {market_data.sp500_futures:+.2f}% |
+| **Dow Jones Industrial Average** | {market_data.sp500_current * 0.95:,.2f} | {market_data.sp500_futures:+.2f}% |
+| **Nasdaq Composite** | {market_data.nasdaq_current:,.2f} | {market_data.nasdaq_futures:+.2f}% |
+| **Fear Index (VIX)** | {market_data.vix:.1f} | - |
+| **10-Year Treasury Yield** | {market_data.treasury_yield:.2f}% | - |"""
         
         # Format headlines with better structure
         headlines_formatted = ""
@@ -171,12 +171,17 @@ class MorningBriefGenerator:
             title = headline.get('title', 'No title available')
             summary = headline.get('summary', 'No summary available')
             source = headline.get('source', 'Unknown')
+            link = headline.get('link', '')
             score = headline.get('market_moving_score', 0)
             
             # Format with clear structure and bullet points
             headlines_formatted += f"**{i}. {title}**\n"
             headlines_formatted += f"   *{summary}*\n"
-            headlines_formatted += f"   Source: {source} | Market Impact Score: {score}\n\n"
+            # Add hyperlink to source if link is available
+            if link:
+                headlines_formatted += f"   Source: [{source}]({link}) | Market Impact Score: {score}\n\n"
+            else:
+                headlines_formatted += f"   Source: {source} | Market Impact Score: {score}\n\n"
         
         # Format earnings snapshot according to template format
         earnings_formatted = ""
@@ -192,7 +197,7 @@ class MorningBriefGenerator:
                 surprise = earning.get('surprise', '')
                 
                 # Format: • COMPANY ($TICKER): EPS ACTUAL vs. ESTIMATE | Revenue ACTUAL vs. ESTIMATE
-                earnings_formatted += f"• **{company}** (${ticker}): EPS {eps_actual} vs. {eps_forecast}"
+                earnings_formatted += f"• **{company}** (${ticker}): EPS Actual {eps_actual} vs. Forecasted {eps_forecast}"
                 
                 # Add surprise info if available
                 if surprise:
@@ -225,46 +230,37 @@ class MorningBriefGenerator:
         # Get mentioned tickers
         mentioned_tickers = self._extract_mentioned_tickers(headlines, earnings_snapshot)
         
-        # Format complete brief with better structure
-        brief = f"""# Morning Finance Brief
-*Generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}*
+        # Format complete brief for compact one-page layout
+        brief = f"""<div style="font-size: 10px; line-height: 1.1; font-family: Arial, sans-serif; max-width: 8.5in;">
 
----
+# 📊 UnBound X Market Brief
+**{datetime.now().strftime('%Y-%m-%d %H:%M')} EST**
 
-## 📊 Market Summary
+**📈 MARKET OUTLOOK**  
 {kwargs['market_summary']}
 
 ---
 
-## 📈 Key Indicators
+**📊 KEY METRICS** | **🏛️ ECONOMIC DATA** | **🎤 FED WATCH**
+
 {key_indicators}
 
----
-
-## 📰 Headlines That Matter
-{headlines_formatted}
-
----
-
-## 🏛️ Economic Indicators
 {kwargs['economic_indicators']}
 
----
-
-## 🎤 Fedspeak
-{kwargs['fedspeak']}
+**Fed Commentary:** {kwargs['fedspeak'].replace('**Recent Commentary:**', '').replace('**Upcoming Events:**', '| Events:').strip()}
 
 ---
 
-## 💰 Earnings Snapshot
+**📰 TOP HEADLINES**
+{headlines_formatted}
+
+**💰 EARNINGS UPDATE**
 {earnings_formatted}
 
 ---
+<small>**Disclaimer:** Educational use only | **Tickers:** {mentioned_tickers} | **API:** {self._estimate_credits_used()}</small>
 
-**Disclaimer:** This brief is for educational purposes only and should not be taken as financial advice. Always do your own research or consult a licensed financial advisor before making investment decisions.
-
-**Tags:** #BeginnerFriendly #MarketBasics #PersonalFinance • **Tickers:** ${mentioned_tickers} • **Credits Used:** {self._estimate_credits_used()}
-"""
+</div>"""
         
         return brief
     
@@ -297,9 +293,9 @@ class MorningBriefGenerator:
         return "~2-3 Groq API calls"
     
     def _save_brief(self, content: str) -> str:
-        """Save brief content to file"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"morning_brief_{timestamp}.md"
+        """Save brief content to file with descriptive naming"""
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
+        filename = f"UnBound_Market_Brief_{timestamp}.md"
         
         # Create outputs directory if it doesn't exist
         outputs_dir = Path(project_root) / "signalmuse" / "outputs"
