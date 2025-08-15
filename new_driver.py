@@ -26,9 +26,8 @@ import time
 import json
 import pandas as pd
 from pathlib import Path
-from typing import Set, List, Dict, Optional, Tuple
+from typing import Set, List, Dict, Tuple
 from datetime import datetime
-from dataclasses import dataclass
 
 # Add project root to path
 project_root = Path(__file__).parent
@@ -554,8 +553,6 @@ Keep it concise and professional. Avoid repetition of the EPS data that will be 
             }
             
             try:
-                import yfinance as yf
-                
                 # Try FRED API for official economic data
                 import requests
                 
